@@ -10,7 +10,6 @@ CONFIG_FILE = CONFIG_DIR / "config.toml"
 DEFAULT_CONFIG = {
     "topic": None,
     "level": None,
-    "hook_frequency": 20,
 }
 
 _TEMPLATE = """\
@@ -21,9 +20,6 @@ _TEMPLATE = """\
 
 # Default level filter (beginner, intermediate, advanced)
 # level = "beginner"
-
-# Show a tip every N shell commands (used by the shell hook)
-hook_frequency = 20
 """
 
 

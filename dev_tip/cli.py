@@ -10,11 +10,11 @@ from rich.text import Text
 
 from dev_tip.config import load_config
 from dev_tip.history import get_unseen, mark_seen
-from dev_tip.hook import hook_app
+from dev_tip.hook import disable as hook_disable
+from dev_tip.hook import enable as hook_enable
 from dev_tip.tips import filter_tips, load_tips
 
 app = typer.Typer(invoke_without_command=True, add_completion=False)
-app.add_typer(hook_app, name="hook")
 console = Console()
 
 TOPIC_EMOJI = {
@@ -89,3 +89,15 @@ def main(
     tip = random.choice(unseen)
     mark_seen(tip["id"])
     _render_tip(tip)
+
+
+@app.command()
+def enable() -> None:
+    """Enable the shell hook (show a tip on every new terminal)."""
+    hook_enable()
+
+
+@app.command()
+def disable() -> None:
+    """Disable the shell hook."""
+    hook_disable()
