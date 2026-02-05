@@ -1,0 +1,17 @@
+[project]
+name = "dev-tip"
+version = "0.1.0"
+description = "Bite-sized developer tips in your terminal"
+requires-python = ">=3.10"
+dependencies = [
+    "typer",
+    "rich",
+    "pyyaml",
+]
+
+[project.scripts]
+dev-tip = "dev_tip.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
