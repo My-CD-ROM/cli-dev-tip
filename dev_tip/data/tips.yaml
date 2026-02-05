@@ -1,3 +1,7 @@
+# =============================================================================
+# Python tips
+# =============================================================================
+
 - id: python-001
   topic: python
   title: Use enumerate() instead of range(len())
@@ -48,6 +52,113 @@
         print(f"You said: {line}")
   level: intermediate
   source: https://peps.python.org/pep-0572/
+
+- id: python-005
+  topic: python
+  title: Use collections.Counter for counting
+  body: >
+    Counter is a dict subclass for counting hashable objects. It has helpful
+    methods like most_common() and supports arithmetic operations.
+  example: |
+    from collections import Counter
+    words = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+    counts = Counter(words)
+    print(counts.most_common(2))  # [('apple', 3), ('banana', 2)]
+  level: beginner
+  source: https://docs.python.org/3/library/collections.html#collections.Counter
+
+- id: python-006
+  topic: python
+  title: Use contextlib for custom context managers
+  body: >
+    The @contextmanager decorator lets you write context managers as simple
+    generator functions instead of full classes with __enter__/__exit__.
+  example: |
+    from contextlib import contextmanager
+    import time
+
+    @contextmanager
+    def timer(label):
+        start = time.perf_counter()
+        yield
+        print(f"{label}: {time.perf_counter() - start:.3f}s")
+
+    with timer("query"):
+        run_query()
+  level: intermediate
+  source: https://docs.python.org/3/library/contextlib.html
+
+- id: python-007
+  topic: python
+  title: Use dataclasses for simple data containers
+  body: >
+    The @dataclass decorator auto-generates __init__, __repr__, __eq__ and more.
+    Saves boilerplate for classes that mainly hold data.
+  example: |
+    from dataclasses import dataclass
+
+    @dataclass
+    class Point:
+        x: float
+        y: float
+        label: str = ""
+  level: beginner
+  source: https://docs.python.org/3/library/dataclasses.html
+
+- id: python-008
+  topic: python
+  title: Use __slots__ for memory-efficient classes
+  body: >
+    Defining __slots__ prevents creation of __dict__ per instance,
+    reducing memory usage significantly for classes with many instances.
+  example: |
+    class Point:
+        __slots__ = ("x", "y")
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+  level: advanced
+  source: https://docs.python.org/3/reference/datamodel.html#slots
+
+- id: python-009
+  topic: python
+  title: Use functools.lru_cache for memoization
+  body: >
+    The @lru_cache decorator caches function results based on arguments.
+    Great for expensive computations with repeated inputs.
+  example: |
+    from functools import lru_cache
+
+    @lru_cache(maxsize=128)
+    def fib(n):
+        if n < 2:
+            return n
+        return fib(n - 1) + fib(n - 2)
+  level: intermediate
+  source: https://docs.python.org/3/library/functools.html#functools.lru_cache
+
+- id: python-010
+  topic: python
+  title: Use structural pattern matching
+  body: >
+    Python 3.10 introduced match/case statements for structural pattern matching.
+    It can destructure objects, match types, and handle complex conditions.
+  example: |
+    match command.split():
+        case ["quit"]:
+            exit()
+        case ["go", direction]:
+            move(direction)
+        case ["get", item] if item in inventory:
+            pick_up(item)
+        case _:
+            print("Unknown command")
+  level: advanced
+  source: https://peps.python.org/pep-0636/
+
+# =============================================================================
+# Git tips
+# =============================================================================
 
 - id: git-001
   topic: git
@@ -101,6 +212,84 @@
     git commit --amend -m "fix: correct validation logic"
   level: beginner
   source: https://git-scm.com/docs/git-commit
+
+- id: git-005
+  topic: git
+  title: Use git log --oneline for a compact history
+  body: >
+    The --oneline flag shows each commit on a single line with just the
+    short hash and message. Add --graph for a visual branch view.
+  example: |
+    git log --oneline --graph --all
+  level: beginner
+  source: https://git-scm.com/docs/git-log
+
+- id: git-006
+  topic: git
+  title: Cherry-pick commits from other branches
+  body: >
+    `git cherry-pick` applies the changes from specific commits onto your
+    current branch. Useful for backporting fixes.
+  example: |
+    git cherry-pick abc1234
+    # Apply multiple commits
+    git cherry-pick abc1234 def5678
+  level: intermediate
+  source: https://git-scm.com/docs/git-cherry-pick
+
+- id: git-007
+  topic: git
+  title: Use git worktree for parallel work
+  body: >
+    `git worktree` lets you check out multiple branches simultaneously in
+    separate directories, sharing the same repo.
+  example: |
+    git worktree add ../hotfix hotfix-branch
+    cd ../hotfix
+    # work on hotfix without stashing your feature work
+  level: advanced
+  source: https://git-scm.com/docs/git-worktree
+
+- id: git-008
+  topic: git
+  title: Use git diff --staged to see what you'll commit
+  body: >
+    `git diff` shows unstaged changes, but `git diff --staged` shows exactly
+    what will be included in the next commit.
+  example: |
+    git add src/main.py
+    git diff --staged  # shows only staged changes
+  level: beginner
+  source: https://git-scm.com/docs/git-diff
+
+- id: git-009
+  topic: git
+  title: Use git reflog to recover lost commits
+  body: >
+    The reflog records every time HEAD changes. Even after a hard reset or
+    deleted branch, you can find and restore lost commits.
+  example: |
+    git reflog
+    # Find the lost commit hash, then:
+    git checkout -b recovery abc1234
+  level: advanced
+  source: https://git-scm.com/docs/git-reflog
+
+- id: git-010
+  topic: git
+  title: Partial staging with git add -p
+  body: >
+    `git add -p` lets you interactively select which hunks of a file to stage.
+    Great for splitting changes into logical commits.
+  example: |
+    git add -p src/main.py
+    # For each hunk, press: y (stage), n (skip), s (split)
+  level: intermediate
+  source: https://git-scm.com/docs/git-add
+
+# =============================================================================
+# Docker tips
+# =============================================================================
 
 - id: docker-001
   topic: docker
@@ -161,6 +350,107 @@
   level: beginner
   source: https://docs.docker.com/build/building/best-practices/
 
+- id: docker-005
+  topic: docker
+  title: Use COPY --chown to avoid extra RUN layers
+  body: >
+    Instead of COPY + RUN chown (which creates two layers), use the --chown
+    flag to set ownership in a single layer.
+  example: |
+    # Instead of:
+    COPY app/ /app/
+    RUN chown -R appuser:appuser /app
+    # Use:
+    COPY --chown=appuser:appuser app/ /app/
+  level: intermediate
+  source: https://docs.docker.com/reference/dockerfile/#copy
+
+- id: docker-006
+  topic: docker
+  title: Use docker compose watch for live reload
+  body: >
+    Docker Compose Watch automatically syncs file changes and rebuilds containers
+    during development, without manual restarts.
+  example: |
+    # compose.yaml
+    services:
+      web:
+        build: .
+        develop:
+          watch:
+            - action: sync
+              path: ./src
+              target: /app/src
+  level: intermediate
+  source: https://docs.docker.com/compose/how-tos/file-watch/
+
+- id: docker-007
+  topic: docker
+  title: Use docker system prune to free disk space
+  body: >
+    Docker can accumulate unused images, containers, and volumes over time.
+    `docker system prune` cleans up everything that's not in use.
+  example: |
+    # Remove unused data
+    docker system prune
+    # Also remove unused volumes
+    docker system prune --volumes
+    # See disk usage first
+    docker system df
+  level: beginner
+  source: https://docs.docker.com/reference/cli/docker/system/prune/
+
+- id: docker-008
+  topic: docker
+  title: Order Dockerfile layers for better caching
+  body: >
+    Docker caches each layer. Put rarely-changing instructions (like installing
+    dependencies) before frequently-changing ones (like copying source code).
+  example: |
+    FROM python:3.12-slim
+    WORKDIR /app
+    # Dependencies change rarely - cached
+    COPY requirements.txt .
+    RUN pip install -r requirements.txt
+    # Source changes often - not cached
+    COPY . .
+  level: beginner
+  source: https://docs.docker.com/build/cache/
+
+- id: docker-009
+  topic: docker
+  title: Use build arguments for flexible images
+  body: >
+    ARG lets you pass build-time variables to your Dockerfile. Useful for
+    version numbers, environment selection, and conditional logic.
+  example: |
+    ARG PYTHON_VERSION=3.12
+    FROM python:${PYTHON_VERSION}-slim
+    ARG ENV=production
+    RUN if [ "$ENV" = "development" ]; then pip install debugpy; fi
+  level: intermediate
+  source: https://docs.docker.com/reference/dockerfile/#arg
+
+- id: docker-010
+  topic: docker
+  title: Use docker exec to debug running containers
+  body: >
+    `docker exec` runs a command inside a running container. Essential for
+    debugging and inspecting container state.
+  example: |
+    # Open a shell in a running container
+    docker exec -it mycontainer /bin/sh
+    # Check environment variables
+    docker exec mycontainer env
+    # View logs inside container
+    docker exec mycontainer cat /var/log/app.log
+  level: beginner
+  source: https://docs.docker.com/reference/cli/docker/container/exec/
+
+# =============================================================================
+# SQL tips
+# =============================================================================
+
 - id: sql-001
   topic: sql
   title: Use COALESCE to handle NULL values
@@ -215,6 +505,107 @@
   level: intermediate
   source: https://www.postgresql.org/docs/current/functions-subquery.html
 
+- id: sql-005
+  topic: sql
+  title: Use window functions for running totals
+  body: >
+    Window functions perform calculations across rows related to the current
+    row, without collapsing them into groups like GROUP BY.
+  example: |
+    SELECT
+        date,
+        revenue,
+        SUM(revenue) OVER (ORDER BY date) AS running_total,
+        AVG(revenue) OVER (ORDER BY date ROWS 6 PRECEDING) AS moving_avg_7d
+    FROM daily_sales;
+  level: advanced
+  source: https://www.postgresql.org/docs/current/tutorial-window.html
+
+- id: sql-006
+  topic: sql
+  title: Use DISTINCT ON for top-per-group queries
+  body: >
+    PostgreSQL's DISTINCT ON returns the first row for each unique value
+    of the specified columns. Simpler than window function alternatives.
+  example: |
+    -- Get the most recent order per customer
+    SELECT DISTINCT ON (customer_id)
+        customer_id, order_id, created_at, total
+    FROM orders
+    ORDER BY customer_id, created_at DESC;
+  level: intermediate
+  source: https://www.postgresql.org/docs/current/sql-select.html#SQL-DISTINCT
+
+- id: sql-007
+  topic: sql
+  title: Use partial indexes for filtered queries
+  body: >
+    A partial index only indexes rows matching a WHERE condition. Smaller
+    and faster than a full index for queries that always filter the same way.
+  example: |
+    -- Only index active users (most queries filter on active)
+    CREATE INDEX idx_active_users ON users (email)
+    WHERE is_active = true;
+  level: advanced
+  source: https://www.postgresql.org/docs/current/indexes-partial.html
+
+- id: sql-008
+  topic: sql
+  title: Use LATERAL joins for row-dependent subqueries
+  body: >
+    LATERAL lets a subquery reference columns from preceding FROM items.
+    Think of it as a SQL foreach loop.
+  example: |
+    SELECT u.name, recent.title
+    FROM users u
+    CROSS JOIN LATERAL (
+        SELECT title FROM posts
+        WHERE posts.user_id = u.id
+        ORDER BY created_at DESC LIMIT 3
+    ) AS recent;
+  level: advanced
+  source: https://www.postgresql.org/docs/current/queries-table-expressions.html#QUERIES-LATERAL
+
+- id: sql-009
+  topic: sql
+  title: Use RETURNING to get affected rows
+  body: >
+    The RETURNING clause returns data from rows modified by INSERT, UPDATE,
+    or DELETE, saving you an extra SELECT query.
+  example: |
+    INSERT INTO users (name, email)
+    VALUES ('Alice', 'alice@example.com')
+    RETURNING id, created_at;
+
+    UPDATE orders SET status = 'shipped'
+    WHERE status = 'pending'
+    RETURNING id, customer_id;
+  level: intermediate
+  source: https://www.postgresql.org/docs/current/dml-returning.html
+
+- id: sql-010
+  topic: sql
+  title: Use CASE for conditional logic in queries
+  body: >
+    CASE expressions let you add if/else logic directly in SQL queries.
+    Works in SELECT, WHERE, ORDER BY, and aggregate functions.
+  example: |
+    SELECT name,
+        CASE
+            WHEN age < 18 THEN 'minor'
+            WHEN age < 65 THEN 'adult'
+            ELSE 'senior'
+        END AS age_group,
+        COUNT(*) FILTER (WHERE status = 'active') AS active_count
+    FROM users
+    GROUP BY name, age;
+  level: beginner
+  source: https://www.postgresql.org/docs/current/functions-conditional.html
+
+# =============================================================================
+# Linux tips
+# =============================================================================
+
 - id: linux-001
   topic: linux
   title: Use ctrl+r for reverse history search
@@ -267,3 +658,97 @@
     watch df -h
   level: beginner
   source: https://man7.org/linux/man-pages/man1/watch.1.html
+
+- id: linux-005
+  topic: linux
+  title: Use curly braces for quick file operations
+  body: >
+    Brace expansion generates multiple strings from a pattern. Useful for
+    creating backups, renaming, or operating on similar paths.
+  example: |
+    # Create a backup
+    cp config.yaml{,.bak}
+    # Create multiple directories
+    mkdir -p project/{src,tests,docs}
+    # Rename extension
+    mv app.{js,ts}
+  level: beginner
+  source: https://www.gnu.org/software/bash/manual/bash.html#Brace-Expansion
+
+- id: linux-006
+  topic: linux
+  title: Use process substitution for diff-like comparisons
+  body: >
+    Process substitution <() lets you use command output as if it were a file.
+    Perfect for comparing outputs of two commands.
+  example: |
+    # Compare two branches' file lists
+    diff <(git ls-tree -r --name-only main) <(git ls-tree -r --name-only dev)
+    # Compare sorted outputs
+    diff <(sort file1.txt) <(sort file2.txt)
+  level: advanced
+  source: https://www.gnu.org/software/bash/manual/bash.html#Process-Substitution
+
+- id: linux-007
+  topic: linux
+  title: Use trap to clean up on script exit
+  body: >
+    The trap command runs a function when your script exits, whether
+    normally or due to an error. Essential for cleaning up temp files.
+  example: |
+    #!/bin/bash
+    tmpfile=$(mktemp)
+    trap "rm -f $tmpfile" EXIT
+
+    # Script runs... temp file is always cleaned up
+    curl -o "$tmpfile" https://example.com/data
+    process "$tmpfile"
+  level: intermediate
+  source: https://www.gnu.org/software/bash/manual/bash.html#Bourne-Shell-Builtins
+
+- id: linux-008
+  topic: linux
+  title: Use ss instead of netstat for network info
+  body: >
+    ss (socket statistics) is faster and more informative than netstat.
+    It's the modern replacement on Linux systems.
+  example: |
+    # List listening TCP ports
+    ss -tlnp
+    # Show established connections
+    ss -tn state established
+    # Find what's using port 8080
+    ss -tlnp | grep 8080
+  level: intermediate
+  source: https://man7.org/linux/man-pages/man8/ss.8.html
+
+- id: linux-009
+  topic: linux
+  title: Use set -euo pipefail in bash scripts
+  body: >
+    This combination makes bash scripts fail fast on errors instead of
+    silently continuing. Essential for reliable scripts.
+  example: |
+    #!/bin/bash
+    set -euo pipefail
+    # -e: exit on error
+    # -u: error on undefined variables
+    # -o pipefail: catch errors in piped commands
+  level: beginner
+  source: https://www.gnu.org/software/bash/manual/bash.html#The-Set-Builtin
+
+- id: linux-010
+  topic: linux
+  title: Use jq to parse JSON on the command line
+  body: >
+    jq is a lightweight command-line JSON processor. It can filter, transform,
+    and format JSON data from APIs and files.
+  example: |
+    # Pretty-print JSON
+    curl -s api.example.com/users | jq '.'
+    # Extract specific fields
+    cat data.json | jq '.users[] | {name, email}'
+    # Filter by condition
+    jq '.items[] | select(.price > 100)' catalog.json
+  level: intermediate
+  source: https://jqlang.github.io/jq/manual/
