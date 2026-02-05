@@ -1,0 +1,269 @@
+- id: python-001
+  topic: python
+  title: Use enumerate() instead of range(len())
+  body: >
+    Instead of `for i in range(len(items))`, use `for i, item in enumerate(items)`.
+    It's more Pythonic and gives you both the index and value.
+  example: |
+    for i, name in enumerate(names, start=1):
+        print(f"{i}. {name}")
+  level: beginner
+  source: https://docs.python.org/3/library/functions.html#enumerate
+
+- id: python-002
+  topic: python
+  title: f-strings support expressions and formatting
+  body: >
+    f-strings can contain any valid Python expression, including method calls,
+    math, and format specifiers.
+  example: |
+    name = "world"
+    print(f"{'hello':>10} {name.upper()}")
+    print(f"pi = {3.14159:.2f}")
+  level: beginner
+  source: https://docs.python.org/3/reference/lexical_analysis.html#f-strings
+
+- id: python-003
+  topic: python
+  title: Use pathlib for file paths
+  body: >
+    The pathlib module provides an object-oriented interface for filesystem paths.
+    It's cross-platform and more readable than os.path.
+  example: |
+    from pathlib import Path
+    config = Path.home() / ".config" / "app" / "settings.toml"
+    config.parent.mkdir(parents=True, exist_ok=True)
+  level: intermediate
+  source: https://docs.python.org/3/library/pathlib.html
+
+- id: python-004
+  topic: python
+  title: Walrus operator for assignment expressions
+  body: >
+    The := operator assigns and returns a value in one expression.
+    Useful in while loops and comprehensions.
+  example: |
+    # Read lines until empty
+    while (line := input("Enter text: ")) != "":
+        print(f"You said: {line}")
+  level: intermediate
+  source: https://peps.python.org/pep-0572/
+
+- id: git-001
+  topic: git
+  title: Use git stash to save work in progress
+  body: >
+    `git stash` saves your uncommitted changes and reverts to a clean working
+    directory. Use `git stash pop` to restore them later.
+  example: |
+    git stash
+    git checkout main
+    # do some work
+    git checkout feature-branch
+    git stash pop
+  level: beginner
+  source: https://git-scm.com/docs/git-stash
+
+- id: git-002
+  topic: git
+  title: Interactive rebase to clean up commits
+  body: >
+    Use `git rebase -i` to squash, reorder, or edit commits before pushing.
+    Keeps your branch history clean and logical.
+  example: |
+    git rebase -i HEAD~3
+    # In the editor, change 'pick' to 'squash' or 'fixup'
+  level: intermediate
+  source: https://git-scm.com/docs/git-rebase
+
+- id: git-003
+  topic: git
+  title: Use git bisect to find bugs
+  body: >
+    `git bisect` performs a binary search through your commit history to find
+    the exact commit that introduced a bug.
+  example: |
+    git bisect start
+    git bisect bad           # current commit is broken
+    git bisect good v1.0.0   # this tag was working
+    # git checks out middle commit, you test, then:
+    git bisect good  # or git bisect bad
+  level: advanced
+  source: https://git-scm.com/docs/git-bisect
+
+- id: git-004
+  topic: git
+  title: Amend the last commit message
+  body: >
+    Made a typo in your last commit message? Use `--amend` to fix it.
+    Only do this before pushing.
+  example: |
+    git commit --amend -m "fix: correct validation logic"
+  level: beginner
+  source: https://git-scm.com/docs/git-commit
+
+- id: docker-001
+  topic: docker
+  title: Use multi-stage builds for smaller images
+  body: >
+    Multi-stage builds let you use one stage for building and another for the
+    final image. This keeps your production image small and clean.
+  example: |
+    FROM node:20 AS builder
+    WORKDIR /app
+    COPY . .
+    RUN npm ci && npm run build
+
+    FROM node:20-slim
+    COPY --from=builder /app/dist ./dist
+    CMD ["node", "dist/index.js"]
+  level: intermediate
+  source: https://docs.docker.com/build/building/multi-stage/
+
+- id: docker-002
+  topic: docker
+  title: Use .dockerignore to speed up builds
+  body: >
+    A .dockerignore file prevents unnecessary files from being sent to the
+    Docker daemon during builds, making them faster.
+  example: |
+    # .dockerignore
+    node_modules
+    .git
+    *.md
+    .env
+  level: beginner
+  source: https://docs.docker.com/build/building/context/#dockerignore-files
+
+- id: docker-003
+  topic: docker
+  title: Use HEALTHCHECK in your Dockerfile
+  body: >
+    HEALTHCHECK tells Docker how to verify your container is still working.
+    Orchestrators use this to restart unhealthy containers.
+  example: |
+    HEALTHCHECK --interval=30s --timeout=3s \
+      CMD curl -f http://localhost:8080/health || exit 1
+  level: intermediate
+  source: https://docs.docker.com/reference/dockerfile/#healthcheck
+
+- id: docker-004
+  topic: docker
+  title: Pin image versions in production
+  body: >
+    Always use specific image tags instead of `latest` in production.
+    This ensures reproducible builds and deployments.
+  example: |
+    # Bad
+    FROM python:latest
+    # Good
+    FROM python:3.12-slim@sha256:abc123...
+  level: beginner
+  source: https://docs.docker.com/build/building/best-practices/
+
+- id: sql-001
+  topic: sql
+  title: Use COALESCE to handle NULL values
+  body: >
+    COALESCE returns the first non-NULL value from a list of arguments.
+    Great for providing default values in queries.
+  example: |
+    SELECT name, COALESCE(nickname, name) AS display_name
+    FROM users;
+  level: beginner
+  source: https://www.postgresql.org/docs/current/functions-conditional.html
+
+- id: sql-002
+  topic: sql
+  title: Use CTEs for readable complex queries
+  body: >
+    Common Table Expressions (WITH clauses) let you break complex queries
+    into named, readable steps.
+  example: |
+    WITH active_users AS (
+        SELECT * FROM users WHERE last_login > NOW() - INTERVAL '30 days'
+    )
+    SELECT department, COUNT(*) FROM active_users
+    GROUP BY department;
+  level: intermediate
+  source: https://www.postgresql.org/docs/current/queries-with.html
+
+- id: sql-003
+  topic: sql
+  title: Use EXPLAIN ANALYZE to debug slow queries
+  body: >
+    EXPLAIN ANALYZE runs the query and shows the actual execution plan
+    with timing information. Essential for performance tuning.
+  example: |
+    EXPLAIN ANALYZE
+    SELECT * FROM orders
+    WHERE customer_id = 42
+    ORDER BY created_at DESC;
+  level: advanced
+  source: https://www.postgresql.org/docs/current/using-explain.html
+
+- id: sql-004
+  topic: sql
+  title: Use EXISTS instead of IN for subqueries
+  body: >
+    EXISTS can be faster than IN for correlated subqueries because it
+    stops scanning once a match is found.
+  example: |
+    -- Instead of: WHERE id IN (SELECT user_id FROM orders)
+    SELECT * FROM users u
+    WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id);
+  level: intermediate
+  source: https://www.postgresql.org/docs/current/functions-subquery.html
+
+- id: linux-001
+  topic: linux
+  title: Use ctrl+r for reverse history search
+  body: >
+    Press ctrl+r in your terminal to search through your command history.
+    Keep pressing ctrl+r to cycle through matches.
+  example: |
+    # Press ctrl+r, then type 'docker'
+    # It will find your last command containing 'docker'
+    (reverse-i-search)`docker': docker compose up -d
+  level: beginner
+  source: https://www.gnu.org/software/bash/manual/bash.html
+
+- id: linux-002
+  topic: linux
+  title: Use xargs to pass stdin as arguments
+  body: >
+    xargs reads items from stdin and executes a command with those items
+    as arguments. Combine with find or grep for powerful pipelines.
+  example: |
+    # Delete all .pyc files
+    find . -name "*.pyc" | xargs rm
+    # Run tests for changed files
+    git diff --name-only | grep test | xargs pytest
+  level: intermediate
+  source: https://man7.org/linux/man-pages/man1/xargs.1.html
+
+- id: linux-003
+  topic: linux
+  title: Use tee to write to file and stdout
+  body: >
+    The tee command reads from stdin and writes to both stdout and a file.
+    Useful for logging command output while still seeing it.
+  example: |
+    # Save build output to file while watching it
+    make build 2>&1 | tee build.log
+  level: intermediate
+  source: https://man7.org/linux/man-pages/man1/tee.1.html
+
+- id: linux-004
+  topic: linux
+  title: Use watch to repeat a command
+  body: >
+    The watch command runs a command repeatedly and displays the output.
+    Great for monitoring changing values.
+  example: |
+    # Watch pod status every 2 seconds
+    watch -n 2 kubectl get pods
+    # Watch disk usage
+    watch df -h
+  level: beginner
+  source: https://man7.org/linux/man-pages/man1/watch.1.html
