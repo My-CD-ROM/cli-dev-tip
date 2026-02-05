@@ -78,6 +78,16 @@ def main(
     topic = topic or config.get("topic")
     level = level or config.get("level")
 
+    ai_provider = config.get("ai_provider")
+    if ai_provider:
+        from dev_tip.ai import get_ai_tip
+
+        tip = get_ai_tip(topic=topic, level=level, config=config)
+        if tip is not None:
+            mark_seen(tip["id"])
+            _render_tip(tip)
+            return
+
     tips = load_tips()
     filtered = filter_tips(tips, topic=topic, level=level)
 

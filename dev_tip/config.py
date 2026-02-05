@@ -10,6 +10,8 @@ CONFIG_FILE = CONFIG_DIR / "config.toml"
 DEFAULT_CONFIG = {
     "topic": None,
     "level": None,
+    "ai_provider": None,
+    "ai_model": None,
 }
 
 _TEMPLATE = """\
@@ -20,6 +22,10 @@ _TEMPLATE = """\
 
 # Default level filter (beginner, intermediate, advanced)
 # level = "beginner"
+
+# AI-powered tip generation (free, requires API key in env var)
+# ai_provider = "gemini"        # or "openrouter"
+# ai_model = "gemini-2.0-flash"
 """
 
 
