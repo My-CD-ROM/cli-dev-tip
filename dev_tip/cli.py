@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
+from dev_tip.config import load_config
 from dev_tip.history import get_unseen, mark_seen
 from dev_tip.tips import filter_tips, load_tips
 
@@ -67,6 +68,10 @@ def main(
     level: Optional[str] = typer.Option(None, "--level", "-l", help="Filter by level"),
 ) -> None:
     """Show a random developer tip."""
+    config = load_config()
+    topic = topic or config.get("topic")
+    level = level or config.get("level")
+
     tips = load_tips()
     filtered = filter_tips(tips, topic=topic, level=level)
 
