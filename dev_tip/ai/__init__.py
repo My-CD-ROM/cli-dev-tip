@@ -15,12 +15,14 @@ _ENV_KEYS = {
 BATCH_SIZE = 10
 
 
-def get_ai_tip(topic: str | None, level: str | None, config: dict) -> dict | None:
-    """Return an AI-generated tip, or None on any failure."""
+def get_ai_tip(
+    topic: str | None, level: str | None, config: dict
+) -> tuple[dict | None, int]:
+    """Return (tip, unseen_count) or (None, 0) on any failure."""
     try:
         provider_name = config.get("ai_provider")
         if not provider_name:
-            return None
+            return None, 0
 
         api_key = config.get("ai_key")
         if not api_key:
@@ -28,7 +30,7 @@ def get_ai_tip(topic: str | None, level: str | None, config: dict) -> dict | Non
             if env_var:
                 api_key = os.environ.get(env_var)
         if not api_key:
-            return None
+            return None, 0
 
         # Try cache first
         tips = load_cache(topic, level)
@@ -41,7 +43,7 @@ def get_ai_tip(topic: str | None, level: str | None, config: dict) -> dict | Non
             save_cache(tips, topic, level)
 
         unseen = get_unseen(tips)
-        return random.choice(unseen)
+        return random.choice(unseen), len(unseen)
 
     except Exception:
-        return None
+        return None, 0

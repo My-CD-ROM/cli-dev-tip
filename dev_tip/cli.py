@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import random
+import subprocess
+import sys
 import textwrap
 from typing import Optional
 
 import typer
-from rich.cells import cell_len
 from rich.console import Console
 
 from dev_tip.config import load_config
@@ -48,6 +49,27 @@ def _render_tip(tip: dict) -> None:
         console.print(" " * max(pad, 0) + line, style="dim", highlight=False)
 
 
+def _maybe_prefetch(topic: str | None, level: str | None, unseen_count: int) -> None:
+    """Spawn a background prefetch if the cache is running low."""
+    from dev_tip.ai.cache import cache_needs_refill
+
+    if not cache_needs_refill(topic, level, unseen_count):
+        return
+
+    topic_arg = str(topic) if topic is not None else "null"
+    level_arg = str(level) if level is not None else "null"
+    try:
+        subprocess.Popen(
+            [sys.executable, "-m", "dev_tip.prefetch", topic_arg, level_arg],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except OSError:
+        pass
+
+
 @app.callback()
 def main(
     ctx: typer.Context,
@@ -72,10 +94,11 @@ def main(
     if ai_provider:
         from dev_tip.ai import get_ai_tip
 
-        tip = get_ai_tip(topic=topic, level=level, config=config)
+        tip, unseen_count = get_ai_tip(topic=topic, level=level, config=config)
         if tip is not None:
             mark_seen(tip["id"])
             _render_tip(tip)
+            _maybe_prefetch(topic, level, unseen_count)
             return
 
     tips = load_tips()
