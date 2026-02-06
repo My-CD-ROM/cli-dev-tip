@@ -3,7 +3,7 @@
 A terminal tool that helps developers learn continuously by showing bite-sized technical tips — right in the terminal, between commands.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/My-CD-ROM/cli-dev-tip/master/assets/tip.svg" width="600" alt="dev-tip showing a Python tip">
+  <img src="https://raw.githubusercontent.com/My-CD-ROM/cli-dev-tip/master/assets/header.png" width="600" alt="dev-tip — learn while you code">
 </p>
 
 ## What it does
