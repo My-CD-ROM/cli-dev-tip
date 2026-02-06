@@ -1,5 +1,5 @@
 [project]
-name = "dev-tip"
+name = "cli-dev-tip"
 version = "0.1.0"
 description = "Bite-sized developer tips in your terminal"
 readme = "README.md"
@@ -38,6 +38,9 @@ dev-tip = "dev_tip.cli:app"
 
 [dependency-groups]
 dev = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["dev_tip"]
 
 [build-system]
 requires = ["hatchling"]

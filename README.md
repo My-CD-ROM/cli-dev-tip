@@ -16,7 +16,7 @@ A terminal tool that helps developers learn continuously by showing bite-sized t
 ## Installation
 
 ```bash
-uv tool install dev-tip
+uv tool install cli-dev-tip
 ```
 
 This makes `dev-tip` available globally from any terminal. No extra packages needed.
