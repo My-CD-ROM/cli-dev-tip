@@ -168,7 +168,7 @@ def enable(
         f"Tips will appear every {every_commands} commands "
         f"or {every_minutes} minutes."
     )
-    console.print(f"Restart your {shell} or run: [bold]source {rc_file}[/bold]")
+    console.print(f"Reload your shell: [bold]exec {shell}[/bold]")
 
 
 def disable() -> None:
