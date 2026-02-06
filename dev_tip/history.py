@@ -21,12 +21,14 @@ def _save_history(seen: list[str]) -> None:
 
 
 def get_unseen(tips: list[dict]) -> list[dict]:
-    """Filter out already-seen tips. If all are seen, reset history."""
-    seen = set(_load_history())
-    unseen = [t for t in tips if t["id"] not in seen]
+    """Filter out already-seen tips. If all are seen, reset but keep the last one."""
+    seen = _load_history()
+    seen_set = set(seen)
+    unseen = [t for t in tips if t["id"] not in seen_set]
     if not unseen:
-        _save_history([])
-        return tips
+        # Keep only the most recent tip so it won't repeat immediately.
+        _save_history(seen[-1:])
+        return [t for t in tips if t["id"] != seen[-1]] if seen else tips
     return unseen
 
 
