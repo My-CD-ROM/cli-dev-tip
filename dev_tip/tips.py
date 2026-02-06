@@ -6,6 +6,12 @@ from typing import Optional
 
 import yaml
 
+VALID_TOPICS = {
+    "python", "git", "docker", "sql", "linux",
+    "kubernetes", "vim", "javascript", "terraform", "rust",
+}
+VALID_LEVELS = {"beginner", "intermediate", "advanced"}
+
 
 def load_tips() -> list[dict]:
     """Load all tips from the bundled YAML file."""

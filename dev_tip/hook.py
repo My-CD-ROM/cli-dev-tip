@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import subprocess
+import sys
 from pathlib import Path
+from textwrap import dedent
 
 from rich.console import Console
 
+from dev_tip.config import CONFIG_DIR, DEFAULT_CONFIG
+
 HOOK_MARKER_START = "# >>> dev-tip hook >>>"
 HOOK_MARKER_END = "# <<< dev-tip hook <<<"
+PAUSE_FILE = CONFIG_DIR / ".paused"
 
 console = Console()
 
@@ -32,6 +38,7 @@ def _build_hook_command(
     provider: str | None = None,
     topic: str | None = None,
     level: str | None = None,
+    quiet: bool = False,
 ) -> str:
     """Build the dev-tip command for the shell hook."""
     parts = ["dev-tip"]
@@ -41,7 +48,54 @@ def _build_hook_command(
         parts.append(f"--topic {topic}")
     if level:
         parts.append(f"--level {level}")
+    if quiet:
+        parts.append("--quiet")
     return " ".join(parts)
+
+
+def _build_hook_block(
+    shell: str,
+    cmd: str,
+    every_commands: int,
+    every_minutes: int,
+) -> str:
+    """Wrap the dev-tip command in a periodic shell function."""
+    pause_path = PAUSE_FILE
+    if shell == "zsh":
+        return dedent(f"""\
+            {HOOK_MARKER_START}
+            _DEV_TIP_CMD_COUNT={every_commands}
+            _DEV_TIP_LAST_SEC=$SECONDS
+            _dev_tip_precmd() {{
+                [ -f {pause_path} ] && return
+                _DEV_TIP_CMD_COUNT=$((_DEV_TIP_CMD_COUNT + 1))
+                if (( _DEV_TIP_CMD_COUNT >= {every_commands} || (SECONDS - _DEV_TIP_LAST_SEC) / 60 >= {every_minutes} )); then
+                    {cmd} 2>/dev/null
+                    _DEV_TIP_CMD_COUNT=0
+                    _DEV_TIP_LAST_SEC=$SECONDS
+                fi
+            }}
+            autoload -Uz add-zsh-hook
+            add-zsh-hook precmd _dev_tip_precmd
+            {HOOK_MARKER_END}
+        """)
+    # bash
+    return dedent(f"""\
+        {HOOK_MARKER_START}
+        _DEV_TIP_CMD_COUNT={every_commands}
+        _DEV_TIP_LAST_SEC=$SECONDS
+        _dev_tip_prompt() {{
+            [ -f {pause_path} ] && return
+            _DEV_TIP_CMD_COUNT=$((_DEV_TIP_CMD_COUNT + 1))
+            if (( _DEV_TIP_CMD_COUNT >= {every_commands} || (SECONDS - _DEV_TIP_LAST_SEC) / 60 >= {every_minutes} )); then
+                {cmd} 2>/dev/null
+                _DEV_TIP_CMD_COUNT=0
+                _DEV_TIP_LAST_SEC=$SECONDS
+            fi
+        }}
+        PROMPT_COMMAND="_dev_tip_prompt${{PROMPT_COMMAND:+;$PROMPT_COMMAND}}"
+        {HOOK_MARKER_END}
+    """)
 
 
 def enable(
@@ -49,22 +103,47 @@ def enable(
     key: str | None = None,
     topic: str | None = None,
     level: str | None = None,
+    every_commands: int | None = None,
+    every_minutes: int | None = None,
+    quiet: bool = False,
 ) -> None:
     """Install the shell hook into the user's rc file."""
-    # Save AI config if provided
-    if provider or key or topic or level:
-        from dev_tip.config import save_config
+    from dev_tip.config import save_config
 
-        updates = {}
-        if provider:
-            updates["ai_provider"] = provider
-        if key:
-            updates["ai_key"] = key
-        if topic:
-            updates["topic"] = topic
-        if level:
-            updates["level"] = level
-        save_config(updates)
+    every_commands = every_commands or DEFAULT_CONFIG["every_commands"]
+    every_minutes = every_minutes or DEFAULT_CONFIG["every_minutes"]
+
+    # Save config if anything provided
+    updates: dict = {}
+    if provider:
+        updates["ai_provider"] = provider
+    if key:
+        updates["ai_key"] = key
+    if topic:
+        updates["topic"] = topic
+    if level:
+        updates["level"] = level
+    updates["every_commands"] = every_commands
+    updates["every_minutes"] = every_minutes
+    if quiet:
+        updates["quiet"] = True
+    save_config(updates)
+
+    # Pre-cache AI tips so the first shell prompt is instant
+    if provider and key:
+        topic_arg = str(topic) if topic is not None else "null"
+        level_arg = str(level) if level is not None else "null"
+        try:
+            subprocess.Popen(
+                [sys.executable, "-m", "dev_tip.prefetch", topic_arg, level_arg],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            console.print("[dim]Pre-caching AI tips in the background...[/dim]")
+        except OSError:
+            pass
 
     rc_file = _get_rc_file()
     shell = _detect_shell()
@@ -79,13 +158,16 @@ def enable(
     else:
         content = ""
 
-    cmd = _build_hook_command(provider, topic, level)
-    hook_block = f"{HOOK_MARKER_START}\n{cmd} 2>/dev/null\n{HOOK_MARKER_END}\n"
+    cmd = _build_hook_command(provider, topic, level, quiet=quiet)
+    hook_block = _build_hook_block(shell, cmd, every_commands, every_minutes)
     content = content.rstrip() + "\n\n" + hook_block
     rc_file.write_text(content)
 
     console.print(f"[green]Hook installed in {rc_file}[/green]")
-    console.print("A tip will appear every time you open a new terminal.")
+    console.print(
+        f"Tips will appear every {every_commands} commands "
+        f"or {every_minutes} minutes."
+    )
     console.print(f"Restart your {shell} or run: [bold]source {rc_file}[/bold]")
 
 
