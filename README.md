@@ -1,4 +1,4 @@
-# dev-tip
+# cli-dev-tip
 
 A terminal tool that helps developers learn continuously by showing bite-sized technical tips — right in the terminal, between commands.
 
