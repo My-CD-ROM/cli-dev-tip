@@ -39,11 +39,12 @@ def _render_tip(tip: dict) -> None:
 
     body = tip["body"].strip()
     wrap_width = min(console.width, 60)
-    lines = textwrap.wrap(body, width=wrap_width)
+    header_lines = textwrap.wrap(header, width=wrap_width)
+    body_lines = textwrap.wrap(body, width=wrap_width)
 
     # Fixed-width block, right-floated against terminal edge.
     term_w = console.width
-    block = [header] + lines
+    block = header_lines + [""] + body_lines
     pad = term_w - wrap_width
     for line in block:
         console.print(" " * max(pad, 0) + line, style="dim", highlight=False)
