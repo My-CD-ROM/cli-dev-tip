@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import random
 
-from dev_tip.ai.cache import load_cache, save_cache
+from dev_tip.ai.cache import is_on_cooldown, load_cache, mark_failure, save_cache
 from dev_tip.ai.provider import create_provider
 from dev_tip.history import get_unseen
 
@@ -36,11 +36,17 @@ def get_ai_tip(
         tips = load_cache(topic, level)
 
         if not tips:
-            provider = create_provider(
-                provider_name, api_key, model=config.get("ai_model")
-            )
-            tips = provider.generate_tips(topic, level, BATCH_SIZE)
-            save_cache(tips, topic, level)
+            if is_on_cooldown():
+                return None, 0
+            try:
+                provider = create_provider(
+                    provider_name, api_key, model=config.get("ai_model")
+                )
+                tips = provider.generate_tips(topic, level, BATCH_SIZE)
+                save_cache(tips, topic, level)
+            except Exception:
+                mark_failure()
+                return None, 0
 
         unseen = get_unseen(tips)
         return random.choice(unseen), len(unseen)

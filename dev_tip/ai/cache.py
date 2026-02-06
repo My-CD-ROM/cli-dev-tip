@@ -6,7 +6,7 @@ from pathlib import Path
 
 CACHE_DIR = Path.home() / ".dev-tip"
 CACHE_FILE = CACHE_DIR / "ai_cache.json"
-TTL_SECONDS = 24 * 60 * 60  # 24 hours
+COOLDOWN_SECONDS = 5 * 60  # 5 min backoff after API failure
 
 
 def _cache_key(topic: str | None, level: str | None) -> str:
@@ -46,13 +46,11 @@ def _save_all(data: dict) -> None:
 
 
 def load_cache(topic: str | None, level: str | None) -> list[dict]:
-    """Return cached tips for a topic+level combo if fresh, else empty list."""
+    """Return all cached tips for a topic+level combo (never expires)."""
     data = _load_all()
     key = _cache_key(topic, level)
     entry = data.get("keys", {}).get(key)
     if not entry:
-        return []
-    if time.time() - entry.get("generated_at", 0) > TTL_SECONDS:
         return []
     return entry.get("tips", [])
 
@@ -82,3 +80,35 @@ def cache_needs_refill(topic: str | None, level: str | None, unseen_count: int) 
     data = _load_all()
     key = _cache_key(topic, level)
     return key in data.get("keys", {})
+
+
+def is_on_cooldown() -> bool:
+    """Return True if a recent API failure means we should skip retrying."""
+    data = _load_all()
+    failed_at = data.get("last_failure", 0)
+    return time.time() - failed_at < COOLDOWN_SECONDS
+
+
+def mark_failure() -> None:
+    """Record an API failure timestamp for cooldown backoff."""
+    data = _load_all()
+    data["last_failure"] = time.time()
+    _save_all(data)
+
+
+def clear_cache() -> None:
+    """Delete the AI cache file."""
+    if CACHE_FILE.exists():
+        CACHE_FILE.unlink()
+
+
+def get_cache_stats() -> dict:
+    """Return cache statistics for the status command."""
+    data = _load_all()
+    keys = data.get("keys", {})
+    total_tips = sum(len(entry.get("tips", [])) for entry in keys.values())
+    return {
+        "keys": len(keys),
+        "total_tips": total_tips,
+        "cooldown_active": is_on_cooldown(),
+    }

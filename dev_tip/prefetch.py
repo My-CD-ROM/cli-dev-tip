@@ -60,9 +60,12 @@ def main() -> None:
         return
 
     try:
-        from dev_tip.ai.cache import load_cache, save_cache
+        from dev_tip.ai.cache import is_on_cooldown, mark_failure, save_cache
         from dev_tip.ai.provider import create_provider
         from dev_tip.config import load_config
+
+        if is_on_cooldown():
+            return
 
         config = load_config()
         provider_name = config.get("ai_provider")
@@ -79,7 +82,11 @@ def main() -> None:
             return
 
         provider = create_provider(provider_name, api_key, model=config.get("ai_model"))
-        new_tips = provider.generate_tips(topic, level, 10)
+        try:
+            new_tips = provider.generate_tips(topic, level, 10)
+        except Exception:
+            mark_failure()
+            return
 
         # save_cache merges and deduplicates automatically
         save_cache(new_tips, topic, level)
