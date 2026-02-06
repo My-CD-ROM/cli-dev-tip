@@ -33,6 +33,14 @@ pipx install cli-dev-tip
 
 This makes `dev-tip` available globally from any terminal.
 
+### Upgrading
+
+```bash
+uv tool install cli-dev-tip --upgrade
+# or
+pip install cli-dev-tip --upgrade
+```
+
 ## Quick start
 
 The recommended setup — AI-generated tips covering general IT topics, appearing every 15 commands or 30 minutes:
