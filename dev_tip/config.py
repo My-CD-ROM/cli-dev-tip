@@ -13,6 +13,9 @@ DEFAULT_CONFIG = {
     "ai_provider": None,
     "ai_model": None,
     "ai_key": None,
+    "every_commands": 15,
+    "every_minutes": 30,
+    "quiet": False,
 }
 
 _TEMPLATE = """\
@@ -27,6 +30,13 @@ _TEMPLATE = """\
 # AI-powered tip generation (free, requires API key in env var)
 # ai_provider = "gemini"        # or "openrouter"
 # ai_model = "gemini-2.0-flash"
+
+# Periodic tip frequency
+# every_commands = 15    # show a tip every N commands
+# every_minutes = 30     # or every M minutes, whichever comes first
+
+# Quiet mode — show tip body only, no header
+# quiet = false
 """
 
 
@@ -47,15 +57,42 @@ def load_config() -> dict[str, Any]:
     return config
 
 
+def _format_value(key: str, value: Any) -> str:
+    """Format a config key-value pair for TOML output."""
+    if isinstance(value, bool):
+        return f'{key} = {"true" if value else "false"}'
+    if isinstance(value, int):
+        return f"{key} = {value}"
+    return f'{key} = "{value}"'
+
+
 def save_config(updates: dict[str, Any]) -> None:
-    """Update specific keys in the config file, preserving existing content."""
+    """Update specific keys in the config file, preserving comments."""
     config = load_config()
     config.update(updates)
 
-    lines = []
+    if CONFIG_FILE.exists():
+        lines = CONFIG_FILE.read_text().splitlines()
+    else:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        lines = _TEMPLATE.splitlines()
+
+    # Update existing keys or uncomment commented keys
+    written_keys: set[str] = set()
+    for i, line in enumerate(lines):
+        stripped = line.lstrip("# ").strip()
+        for key, value in config.items():
+            if value is None:
+                continue
+            if stripped.startswith(f"{key} =") or stripped.startswith(f"{key}="):
+                lines[i] = _format_value(key, value)
+                written_keys.add(key)
+                break
+
+    # Append any keys not found in existing lines
     for key, value in config.items():
-        if value is not None:
-            lines.append(f'{key} = "{value}"')
+        if value is not None and key not in written_keys:
+            lines.append(_format_value(key, value))
 
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     CONFIG_FILE.write_text("\n".join(lines) + "\n")
