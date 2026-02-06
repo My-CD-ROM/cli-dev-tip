@@ -2,6 +2,10 @@
 
 A terminal tool that helps developers learn continuously by showing bite-sized technical tips — right in the terminal, between commands.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/My-CD-ROM/cli-dev-tip/master/assets/tip.svg" width="600" alt="dev-tip showing a Python tip">
+</p>
+
 ## What it does
 
 - Shows tips periodically during your shell session (every N commands or M minutes)
@@ -19,7 +23,15 @@ A terminal tool that helps developers learn continuously by showing bite-sized t
 uv tool install cli-dev-tip
 ```
 
-This makes `dev-tip` available globally from any terminal. No extra packages needed.
+Also works with pip or pipx:
+
+```bash
+pip install cli-dev-tip
+# or
+pipx install cli-dev-tip
+```
+
+This makes `dev-tip` available globally from any terminal.
 
 ## Quick start
 
@@ -28,6 +40,10 @@ The recommended setup — AI-generated tips covering general IT topics, appearin
 ```bash
 dev-tip enable --provider gemini --key YOUR_GEMINI_API_KEY
 ```
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/My-CD-ROM/cli-dev-tip/master/assets/enable.svg" width="600" alt="dev-tip enable output">
+</p>
 
 Get a free Gemini API key at https://aistudio.google.com or a free OpenRouter key at https://openrouter.ai/keys.
 
@@ -133,10 +149,9 @@ Unknown topics produce a warning when using static tips (AI can handle any topic
 
 Temporarily stop tips without removing the hook:
 
-```bash
-dev-tip pause    # stops tips, hook stays installed
-dev-tip resume   # starts tips again
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/My-CD-ROM/cli-dev-tip/master/assets/pause.svg" width="600" alt="dev-tip pause and resume">
+</p>
 
 This creates/removes a `.paused` file in `~/.dev-tip/`. The shell hook checks for it with a fast `[ -f ]` test — no Python invoked when paused.
 
@@ -144,9 +159,9 @@ This creates/removes a `.paused` file in `~/.dev-tip/`. The shell hook checks fo
 
 Show current configuration and diagnostics:
 
-```bash
-dev-tip status
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/My-CD-ROM/cli-dev-tip/master/assets/status.svg" width="600" alt="dev-tip status output">
+</p>
 
 Displays hook state, pause status, config values, AI provider info, cache stats, and tip history count.
 
@@ -189,7 +204,3 @@ Settings are stored in `~/.dev-tip/config.toml`:
 ```
 
 Values passed via `dev-tip enable` flags are saved here automatically. Comments in the config file are preserved when values are updated.
-
-## Status
-
-Early development — not yet published to PyPI.
