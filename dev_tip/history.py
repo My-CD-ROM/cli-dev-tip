@@ -30,6 +30,12 @@ def get_unseen(tips: list[dict]) -> list[dict]:
     return unseen
 
 
+def all_seen(tips: list[dict]) -> bool:
+    """Check if every tip has been seen."""
+    seen = set(_load_history())
+    return all(t["id"] in seen for t in tips)
+
+
 def mark_seen(tip_id: str) -> None:
     """Append a tip ID to the history file."""
     seen = _load_history()

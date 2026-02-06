@@ -22,10 +22,11 @@ def get_ai_tip(topic: str | None, level: str | None, config: dict) -> dict | Non
         if not provider_name:
             return None
 
-        env_var = _ENV_KEYS.get(provider_name)
-        if not env_var:
-            return None
-        api_key = os.environ.get(env_var)
+        api_key = config.get("ai_key")
+        if not api_key:
+            env_var = _ENV_KEYS.get(provider_name)
+            if env_var:
+                api_key = os.environ.get(env_var)
         if not api_key:
             return None
 

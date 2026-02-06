@@ -7,12 +7,6 @@ from rich.console import Console
 HOOK_MARKER_START = "# >>> dev-tip hook >>>"
 HOOK_MARKER_END = "# <<< dev-tip hook <<<"
 
-HOOK_BLOCK = """\
-# >>> dev-tip hook >>>
-dev-tip 2>/dev/null
-# <<< dev-tip hook <<<
-"""
-
 console = Console()
 
 
@@ -34,23 +28,60 @@ def _get_rc_file() -> Path:
     return Path.home() / ".bashrc"
 
 
-def enable() -> None:
+def _build_hook_command(
+    provider: str | None = None,
+    topic: str | None = None,
+    level: str | None = None,
+) -> str:
+    """Build the dev-tip command for the shell hook."""
+    parts = ["dev-tip"]
+    if provider:
+        parts.append(f"--provider {provider}")
+    if topic:
+        parts.append(f"--topic {topic}")
+    if level:
+        parts.append(f"--level {level}")
+    return " ".join(parts)
+
+
+def enable(
+    provider: str | None = None,
+    key: str | None = None,
+    topic: str | None = None,
+    level: str | None = None,
+) -> None:
     """Install the shell hook into the user's rc file."""
+    # Save AI config if provided
+    if provider or key or topic or level:
+        from dev_tip.config import save_config
+
+        updates = {}
+        if provider:
+            updates["ai_provider"] = provider
+        if key:
+            updates["ai_key"] = key
+        if topic:
+            updates["topic"] = topic
+        if level:
+            updates["level"] = level
+        save_config(updates)
+
     rc_file = _get_rc_file()
     shell = _detect_shell()
 
+    # Remove existing hook first (so re-running enable updates it)
     if rc_file.exists():
         content = rc_file.read_text()
         if HOOK_MARKER_START in content:
-            console.print(
-                f"[yellow]Hook already installed in {rc_file}. "
-                "Run 'dev-tip disable' first to reinstall.[/yellow]"
-            )
-            return
+            start = content.index(HOOK_MARKER_START)
+            end = content.index(HOOK_MARKER_END) + len(HOOK_MARKER_END)
+            content = content[:start].rstrip() + content[end:].lstrip("\n")
     else:
         content = ""
 
-    content = content.rstrip() + "\n\n" + HOOK_BLOCK
+    cmd = _build_hook_command(provider, topic, level)
+    hook_block = f"{HOOK_MARKER_START}\n{cmd} 2>/dev/null\n{HOOK_MARKER_END}\n"
+    content = content.rstrip() + "\n\n" + hook_block
     rc_file.write_text(content)
 
     console.print(f"[green]Hook installed in {rc_file}[/green]")

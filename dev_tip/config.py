@@ -12,6 +12,7 @@ DEFAULT_CONFIG = {
     "level": None,
     "ai_provider": None,
     "ai_model": None,
+    "ai_key": None,
 }
 
 _TEMPLATE = """\
@@ -44,3 +45,17 @@ def load_config() -> dict[str, Any]:
         if key in raw:
             config[key] = raw[key]
     return config
+
+
+def save_config(updates: dict[str, Any]) -> None:
+    """Update specific keys in the config file, preserving existing content."""
+    config = load_config()
+    config.update(updates)
+
+    lines = []
+    for key, value in config.items():
+        if value is not None:
+            lines.append(f'{key} = "{value}"')
+
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    CONFIG_FILE.write_text("\n".join(lines) + "\n")

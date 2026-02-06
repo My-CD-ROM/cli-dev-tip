@@ -156,6 +156,90 @@
   level: advanced
   source: https://peps.python.org/pep-0636/
 
+- id: python-011
+  topic: python
+  title: Use itertools for efficient looping
+  body: >
+    The itertools module provides memory-efficient tools for working with
+    iterators. chain, product, groupby, and islice cover most use cases.
+  example: |
+    from itertools import chain, islice
+
+    # Flatten multiple lists
+    all_items = list(chain([1, 2], [3, 4], [5]))
+
+    # Take first 5 items from any iterable
+    first_five = list(islice(range(1000000), 5))
+  level: intermediate
+  source: https://docs.python.org/3/library/itertools.html
+
+- id: python-012
+  topic: python
+  title: Use dict.get() with a default value
+  body: >
+    dict.get(key, default) returns the default instead of raising KeyError
+    when the key is missing. Cleaner than try/except for simple lookups.
+  example: |
+    config = {"debug": True}
+    # Instead of: config["timeout"] if "timeout" in config else 30
+    timeout = config.get("timeout", 30)
+  level: beginner
+  source: https://docs.python.org/3/library/stdtypes.html#dict.get
+
+- id: python-013
+  topic: python
+  title: Use zip() to iterate multiple sequences
+  body: >
+    zip() pairs up elements from multiple iterables. In Python 3.10+
+    use strict=True to catch length mismatches.
+  example: |
+    names = ["Alice", "Bob", "Charlie"]
+    scores = [95, 87, 92]
+
+    for name, score in zip(names, scores, strict=True):
+        print(f"{name}: {score}")
+  level: beginner
+  source: https://docs.python.org/3/library/functions.html#zip
+
+- id: python-014
+  topic: python
+  title: Use __init_subclass__ for plugin patterns
+  body: >
+    __init_subclass__ runs when a class is subclassed. Perfect for auto-registering
+    plugins without metaclasses or decorators.
+  example: |
+    class Plugin:
+        registry = {}
+        def __init_subclass__(cls, name=None, **kwargs):
+            super().__init_subclass__(**kwargs)
+            Plugin.registry[name or cls.__name__] = cls
+
+    class JSONLoader(Plugin, name="json"):
+        pass
+
+    print(Plugin.registry)  # {"json": <class 'JSONLoader'>}
+  level: advanced
+  source: https://docs.python.org/3/reference/datamodel.html#object.__init_subclass__
+
+- id: python-015
+  topic: python
+  title: Use typing.Protocol for structural subtyping
+  body: >
+    Protocol defines interfaces by structure, not inheritance. A class matches
+    if it has the right methods — no need to explicitly subclass.
+  example: |
+    from typing import Protocol
+
+    class Closable(Protocol):
+        def close(self) -> None: ...
+
+    def cleanup(resource: Closable) -> None:
+        resource.close()
+
+    # Any object with a close() method works — no inheritance needed
+  level: advanced
+  source: https://docs.python.org/3/library/typing.html#typing.Protocol
+
 # =============================================================================
 # Git tips
 # =============================================================================
@@ -286,6 +370,82 @@
     # For each hunk, press: y (stage), n (skip), s (split)
   level: intermediate
   source: https://git-scm.com/docs/git-add
+
+- id: git-011
+  topic: git
+  title: Use git blame to find who changed a line
+  body: >
+    `git blame` shows who last modified each line of a file and in which
+    commit. Use -L to narrow down to specific lines.
+  example: |
+    git blame src/main.py
+    # Blame specific lines
+    git blame -L 10,20 src/main.py
+    # Ignore whitespace changes
+    git blame -w src/main.py
+  level: beginner
+  source: https://git-scm.com/docs/git-blame
+
+- id: git-012
+  topic: git
+  title: Set up git aliases for common commands
+  body: >
+    Git aliases save keystrokes for frequently used commands.
+    Define them in your global git config.
+  example: |
+    git config --global alias.co checkout
+    git config --global alias.br branch
+    git config --global alias.st status
+    git config --global alias.lg "log --oneline --graph --all"
+    # Now use: git co main, git lg
+  level: beginner
+  source: https://git-scm.com/book/en/v2/Git-Basics-Git-Aliases
+
+- id: git-013
+  topic: git
+  title: Use git switch and git restore
+  body: >
+    Modern Git split checkout into two commands. `git switch` changes branches,
+    `git restore` discards file changes. Less ambiguous than checkout.
+  example: |
+    # Switch branches (instead of git checkout main)
+    git switch main
+    git switch -c new-feature  # create + switch
+
+    # Restore files (instead of git checkout -- file)
+    git restore src/main.py
+    git restore --staged src/main.py  # unstage
+  level: intermediate
+  source: https://git-scm.com/docs/git-switch
+
+- id: git-014
+  topic: git
+  title: Use git commit --fixup for clean history
+  body: >
+    `--fixup` creates a commit that marks itself as a fix for a previous
+    commit. Then `rebase --autosquash` merges them automatically.
+  example: |
+    # Fix something that should have been in abc1234
+    git commit --fixup abc1234
+    # Later, squash fixups automatically
+    git rebase -i --autosquash main
+  level: advanced
+  source: https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---fixupamaborgrewordltcommitgt
+
+- id: git-015
+  topic: git
+  title: Use git diff with word-level granularity
+  body: >
+    `--word-diff` shows changes at the word level instead of whole lines.
+    Makes it much easier to spot small changes in prose or config files.
+  example: |
+    git diff --word-diff
+    # Colored inline changes
+    git diff --word-diff=color
+    # Custom word regex (useful for code)
+    git diff --word-diff-regex='[a-zA-Z_]+|.'
+  level: intermediate
+  source: https://git-scm.com/docs/git-diff
 
 # =============================================================================
 # Docker tips
@@ -447,6 +607,97 @@
   level: beginner
   source: https://docs.docker.com/reference/cli/docker/container/exec/
 
+- id: docker-011
+  topic: docker
+  title: Use docker compose profiles for environments
+  body: >
+    Profiles let you define services that only start when explicitly requested.
+    Useful for debug tools, monitoring, or test databases.
+  example: |
+    # compose.yaml
+    services:
+      app:
+        build: .
+      debug:
+        image: busybox
+        profiles: ["debug"]
+      mailhog:
+        image: mailhog/mailhog
+        profiles: ["debug"]
+
+    # docker compose --profile debug up
+  level: intermediate
+  source: https://docs.docker.com/compose/how-tos/profiles/
+
+- id: docker-012
+  topic: docker
+  title: Run as non-root user for security
+  body: >
+    Containers run as root by default. Create a non-root user to limit
+    the blast radius if your container is compromised.
+  example: |
+    FROM python:3.12-slim
+    RUN groupadd -r app && useradd -r -g app app
+    WORKDIR /app
+    COPY --chown=app:app . .
+    USER app
+    CMD ["python", "main.py"]
+  level: intermediate
+  source: https://docs.docker.com/build/building/best-practices/#user
+
+- id: docker-013
+  topic: docker
+  title: Use docker logs to troubleshoot containers
+  body: >
+    `docker logs` shows stdout/stderr from a container. Use --follow to
+    stream in real time and --since to filter by time.
+  example: |
+    # View all logs
+    docker logs mycontainer
+    # Stream logs in real time
+    docker logs -f mycontainer
+    # Last 100 lines from past hour
+    docker logs --tail 100 --since 1h mycontainer
+  level: beginner
+  source: https://docs.docker.com/reference/cli/docker/container/logs/
+
+- id: docker-014
+  topic: docker
+  title: Use tmpfs mounts for sensitive data
+  body: >
+    tmpfs mounts exist only in memory and are never written to disk.
+    Use them for secrets, temp files, or build caches.
+  example: |
+    # CLI
+    docker run --tmpfs /tmp:rw,noexec,nosuid myimage
+
+    # compose.yaml
+    services:
+      app:
+        tmpfs:
+          - /tmp
+          - /run
+  level: advanced
+  source: https://docs.docker.com/engine/storage/tmpfs/
+
+- id: docker-015
+  topic: docker
+  title: Use docker network for container communication
+  body: >
+    Containers on the same Docker network can reach each other by service name.
+    No need to publish ports for inter-container communication.
+  example: |
+    # compose.yaml - app reaches db at "db:5432"
+    services:
+      app:
+        build: .
+        environment:
+          DATABASE_URL: postgresql://user:pass@db:5432/mydb
+      db:
+        image: postgres:16
+  level: beginner
+  source: https://docs.docker.com/engine/network/
+
 # =============================================================================
 # SQL tips
 # =============================================================================
@@ -602,6 +853,92 @@
   level: beginner
   source: https://www.postgresql.org/docs/current/functions-conditional.html
 
+- id: sql-011
+  topic: sql
+  title: Use UPSERT to insert or update in one statement
+  body: >
+    INSERT ... ON CONFLICT handles the common "insert if new, update if exists"
+    pattern in a single atomic statement.
+  example: |
+    INSERT INTO counters (page, hits)
+    VALUES ('home', 1)
+    ON CONFLICT (page)
+    DO UPDATE SET hits = counters.hits + 1;
+  level: intermediate
+  source: https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT
+
+- id: sql-012
+  topic: sql
+  title: Use generate_series for test data
+  body: >
+    generate_series() creates rows on the fly. Perfect for generating test data,
+    filling date gaps, or creating sequences.
+  example: |
+    -- Generate dates for the past 30 days
+    SELECT date::date
+    FROM generate_series(
+        NOW() - INTERVAL '30 days', NOW(), '1 day'
+    ) AS date;
+
+    -- Generate 1000 test users
+    INSERT INTO users (name, email)
+    SELECT 'user_' || n, 'user' || n || '@test.com'
+    FROM generate_series(1, 1000) AS n;
+  level: intermediate
+  source: https://www.postgresql.org/docs/current/functions-srf.html
+
+- id: sql-013
+  topic: sql
+  title: Use jsonb for flexible schema data
+  body: >
+    PostgreSQL's jsonb stores JSON in a binary format with full indexing
+    support. Perfect for semi-structured data alongside regular columns.
+  example: |
+    CREATE TABLE events (
+        id serial PRIMARY KEY,
+        type text NOT NULL,
+        data jsonb NOT NULL
+    );
+
+    -- Query nested JSON
+    SELECT data->>'email' FROM events
+    WHERE data @> '{"role": "admin"}';
+
+    -- Index for fast lookups
+    CREATE INDEX idx_events_data ON events USING gin (data);
+  level: advanced
+  source: https://www.postgresql.org/docs/current/datatype-json.html
+
+- id: sql-014
+  topic: sql
+  title: Use transactions to group related changes
+  body: >
+    Wrap related INSERT/UPDATE/DELETE statements in a transaction so they
+    either all succeed or all roll back together.
+  example: |
+    BEGIN;
+    UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+    UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+    COMMIT;
+    -- If anything fails, both changes are rolled back
+  level: beginner
+  source: https://www.postgresql.org/docs/current/tutorial-transactions.html
+
+- id: sql-015
+  topic: sql
+  title: Use string_agg to concatenate grouped rows
+  body: >
+    string_agg() combines multiple row values into a single delimited string
+    within a GROUP BY. Useful for comma-separated lists.
+  example: |
+    SELECT department,
+        string_agg(name, ', ' ORDER BY name) AS members
+    FROM employees
+    GROUP BY department;
+    -- Result: "Engineering" | "Alice, Bob, Charlie"
+  level: beginner
+  source: https://www.postgresql.org/docs/current/functions-aggregate.html
+
 # =============================================================================
 # Linux tips
 # =============================================================================
@@ -752,3 +1089,982 @@
     jq '.items[] | select(.price > 100)' catalog.json
   level: intermediate
   source: https://jqlang.github.io/jq/manual/
+
+- id: linux-011
+  topic: linux
+  title: Use rsync instead of cp for large copies
+  body: >
+    rsync only transfers changed files and can resume interrupted transfers.
+    Far better than cp for large directories or remote copies.
+  example: |
+    # Copy directory (only changed files)
+    rsync -avz src/ dest/
+    # Copy to remote with progress
+    rsync -avz --progress ./data user@server:/backup/
+    # Dry run to preview changes
+    rsync -avzn src/ dest/
+  level: intermediate
+  source: https://man7.org/linux/man-pages/man1/rsync.1.html
+
+- id: linux-012
+  topic: linux
+  title: Use !! to repeat the last command
+  body: >
+    `!!` expands to your last command. Most commonly used with sudo when
+    you forgot to run something as root.
+  example: |
+    apt install nginx
+    # Permission denied
+    sudo !!
+    # Expands to: sudo apt install nginx
+  level: beginner
+  source: https://www.gnu.org/software/bash/manual/bash.html#Event-Designators
+
+- id: linux-013
+  topic: linux
+  title: Use column to format command output as a table
+  body: >
+    The column command formats text into aligned columns.
+    Pipe any delimited output through it for instant readability.
+  example: |
+    # Format CSV as table
+    cat data.csv | column -t -s ','
+    # Format mount output
+    mount | column -t
+  level: beginner
+  source: https://man7.org/linux/man-pages/man1/column.1.html
+
+- id: linux-014
+  topic: linux
+  title: Use nohup to keep commands running after logout
+  body: >
+    nohup prevents a command from being killed when you close the terminal.
+    Output is saved to nohup.out by default.
+  example: |
+    # Run a long process that survives logout
+    nohup python train_model.py &
+    # Check output later
+    tail -f nohup.out
+  level: intermediate
+  source: https://man7.org/linux/man-pages/man1/nohup.1.html
+
+- id: linux-015
+  topic: linux
+  title: Use lsof to find what's using a file or port
+  body: >
+    lsof (list open files) shows which processes have a file or port open.
+    Essential for debugging "address already in use" errors.
+  example: |
+    # Find what's using port 8080
+    lsof -i :8080
+    # Find who has a file open
+    lsof /var/log/syslog
+    # List all files opened by a process
+    lsof -p 1234
+  level: intermediate
+  source: https://man7.org/linux/man-pages/man8/lsof.8.html
+
+# =============================================================================
+# Kubernetes tips
+# =============================================================================
+
+- id: k8s-001
+  topic: kubernetes
+  title: Use kubectl explain to explore resource specs
+  body: >
+    `kubectl explain` shows the schema for any Kubernetes resource field.
+    No need to look up docs — it's built into the CLI.
+  example: |
+    kubectl explain pod.spec.containers
+    kubectl explain deployment.spec.strategy
+    # Recursive view
+    kubectl explain pod.spec --recursive
+  level: beginner
+  source: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_explain/
+
+- id: k8s-002
+  topic: kubernetes
+  title: Use labels and selectors for everything
+  body: >
+    Labels are key-value pairs attached to resources. Selectors let you query
+    and operate on groups of resources matching specific labels.
+  example: |
+    # Add labels
+    kubectl label pods my-pod env=staging
+
+    # Select by label
+    kubectl get pods -l app=web,env=prod
+    kubectl delete pods -l job=cleanup
+  level: beginner
+  source: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+
+- id: k8s-003
+  topic: kubernetes
+  title: Use kubectl port-forward for local debugging
+  body: >
+    port-forward tunnels a local port to a pod or service. Access internal
+    services without exposing them externally.
+  example: |
+    # Forward local 8080 to pod's 80
+    kubectl port-forward pod/my-pod 8080:80
+    # Forward to a service
+    kubectl port-forward svc/my-service 5432:5432
+    # Now connect at localhost:8080 or localhost:5432
+  level: beginner
+  source: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_port-forward/
+
+- id: k8s-004
+  topic: kubernetes
+  title: Use resource requests and limits
+  body: >
+    Requests guarantee minimum resources for your pod. Limits cap the maximum.
+    Without them, a single pod can starve the entire node.
+  example: |
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+  level: intermediate
+  source: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+
+- id: k8s-005
+  topic: kubernetes
+  title: Use kubectl get with custom columns
+  body: >
+    Custom columns let you extract exactly the fields you need from resources.
+    Much more flexible than the default table output.
+  example: |
+    kubectl get pods -o custom-columns=\
+      NAME:.metadata.name,\
+      STATUS:.status.phase,\
+      NODE:.spec.nodeName,\
+      IP:.status.podIP
+  level: intermediate
+  source: https://kubernetes.io/docs/reference/kubectl/
+
+- id: k8s-006
+  topic: kubernetes
+  title: Use ConfigMaps for non-secret configuration
+  body: >
+    ConfigMaps decouple configuration from container images. Mount them as
+    files or inject as environment variables.
+  example: |
+    # Create from file
+    kubectl create configmap app-config --from-file=config.yaml
+
+    # Use in pod
+    envFrom:
+      - configMapRef:
+          name: app-config
+    # Or mount as volume
+    volumes:
+      - name: config
+        configMap:
+          name: app-config
+  level: intermediate
+  source: https://kubernetes.io/docs/concepts/configuration/configmap/
+
+- id: k8s-007
+  topic: kubernetes
+  title: Use kubectl rollout to manage deployments
+  body: >
+    rollout commands let you check status, pause, resume, or undo deployments.
+    Use undo to instantly roll back a bad release.
+  example: |
+    # Check rollout status
+    kubectl rollout status deployment/my-app
+    # Roll back to previous version
+    kubectl rollout undo deployment/my-app
+    # Roll back to specific revision
+    kubectl rollout undo deployment/my-app --to-revision=3
+  level: beginner
+  source: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/
+
+- id: k8s-008
+  topic: kubernetes
+  title: Use liveness and readiness probes
+  body: >
+    Liveness probes restart unhealthy containers. Readiness probes stop sending
+    traffic to containers that aren't ready. Both are essential for reliability.
+  example: |
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8080
+      initialDelaySeconds: 3
+      periodSeconds: 5
+  level: intermediate
+  source: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+
+- id: k8s-009
+  topic: kubernetes
+  title: Use kubectl debug for troubleshooting
+  body: >
+    kubectl debug creates ephemeral containers in a running pod or a copy of
+    it. Debug without modifying the original pod spec.
+  example: |
+    # Attach a debug container to a running pod
+    kubectl debug -it my-pod --image=busybox --target=my-container
+    # Create a debug copy of a pod
+    kubectl debug my-pod -it --copy-to=my-debug --container=debug
+  level: advanced
+  source: https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/
+
+- id: k8s-010
+  topic: kubernetes
+  title: Use kubectl dry-run for safe testing
+  body: >
+    --dry-run=client validates your YAML without applying it. Combine with
+    -o yaml to generate resource manifests from imperative commands.
+  example: |
+    # Validate without applying
+    kubectl apply -f deployment.yaml --dry-run=client
+    # Generate YAML from imperative command
+    kubectl create deployment nginx --image=nginx \
+      --dry-run=client -o yaml > deployment.yaml
+  level: beginner
+  source: https://kubernetes.io/docs/reference/kubectl/
+
+# =============================================================================
+# Vim tips
+# =============================================================================
+
+- id: vim-001
+  topic: vim
+  title: Use ciw to change a word quickly
+  body: >
+    `ciw` (change inner word) deletes the word under the cursor and enters
+    insert mode. Works anywhere in the word, not just the start.
+  example: |
+    # Cursor on "hello" in: print("hello")
+    ciw  → deletes "hello", enter insert mode
+    # Type new word: print("world")
+    # Also: diw (delete), yiw (yank/copy)
+  level: beginner
+  source: https://vimhelp.org/motion.txt.html#text-objects
+
+- id: vim-002
+  topic: vim
+  title: Use . to repeat the last change
+  body: >
+    The dot command repeats your last edit. Plan your edits so they're
+    repeatable, then use . to apply them everywhere.
+  example: |
+    # Change "foo" to "bar" on current line
+    /foo<Enter>     → find "foo"
+    cw bar<Esc>     → change word to "bar"
+    n               → jump to next "foo"
+    .               → repeat the change
+  level: beginner
+  source: https://vimhelp.org/repeat.txt.html#single-repeat
+
+- id: vim-003
+  topic: vim
+  title: Use visual block mode for column editing
+  body: >
+    Ctrl-v enters visual block mode for rectangular selections.
+    Select a column, then insert, delete, or replace text across all lines.
+  example: |
+    # Add "//" comment prefix to lines 5-15:
+    5G           → go to line 5
+    Ctrl-v       → enter block mode
+    10j          → select down 10 lines
+    I// <Esc>    → insert "// " at the start of each line
+  level: intermediate
+  source: https://vimhelp.org/visual.txt.html#blockwise-visual
+
+- id: vim-004
+  topic: vim
+  title: Use marks to jump between locations
+  body: >
+    Marks save cursor positions you can jump back to. Lowercase marks are
+    per-file, uppercase marks work across files.
+  example: |
+    ma        → set mark 'a' at current position
+    'a        → jump back to mark 'a' (line)
+    `a        → jump back to mark 'a' (exact position)
+    ''        → jump to position before last jump
+    '.        → jump to last edited line
+  level: intermediate
+  source: https://vimhelp.org/motion.txt.html#mark-motions
+
+- id: vim-005
+  topic: vim
+  title: Use text objects for precise editing
+  body: >
+    Text objects select structured chunks of text. "i" means inner (without
+    delimiters), "a" means around (with delimiters).
+  example: |
+    ci"    → change inside quotes
+    da(    → delete around parentheses (including them)
+    vi{    → visually select inside curly braces
+    yat    → yank (copy) around HTML tag
+    cit    → change inside HTML tag
+  level: intermediate
+  source: https://vimhelp.org/motion.txt.html#object-select
+
+- id: vim-006
+  topic: vim
+  title: Use macros to automate repetitive edits
+  body: >
+    Record a sequence of commands as a macro, then replay it any number
+    of times. Perfect for repetitive formatting or refactoring.
+  example: |
+    qa        → start recording macro 'a'
+    0         → go to start of line
+    i"<Esc>   → insert quote
+    A",<Esc>  → append quote and comma
+    j         → move to next line
+    q         → stop recording
+    10@a      → replay macro 10 times
+  level: intermediate
+  source: https://vimhelp.org/repeat.txt.html#complex-repeat
+
+- id: vim-007
+  topic: vim
+  title: Use buffers instead of tabs
+  body: >
+    Buffers are Vim's way of holding open files. They're more efficient than
+    tabs. Use :ls to list them and :b to switch.
+  example: |
+    :e file.py     → open file in new buffer
+    :ls            → list all open buffers
+    :b 3           → switch to buffer 3
+    :b main        → switch to buffer matching "main"
+    :bd            → close current buffer
+  level: beginner
+  source: https://vimhelp.org/windows.txt.html#buffers
+
+- id: vim-008
+  topic: vim
+  title: Use :g for global commands on matching lines
+  body: >
+    The :g command executes an action on every line matching a pattern.
+    It's like grep + sed combined inside Vim.
+  example: |
+    :g/TODO/d         → delete all lines containing "TODO"
+    :g/^$/d           → delete all blank lines
+    :g/debug/normal A  // FIXME
+    :g!/pattern/d     → delete lines NOT matching pattern
+  level: advanced
+  source: https://vimhelp.org/repeat.txt.html#:global
+
+- id: vim-009
+  topic: vim
+  title: Use Ctrl-o and Ctrl-i to navigate jumplist
+  body: >
+    Vim remembers every position you jump from. Ctrl-o goes back through
+    your jump history, Ctrl-i goes forward.
+  example: |
+    # You're in file_a.py, jump to file_b.py
+    Ctrl-o    → jump back to file_a.py
+    Ctrl-o    → jump back further
+    Ctrl-i    → jump forward again
+    :jumps    → show full jump history
+  level: beginner
+  source: https://vimhelp.org/motion.txt.html#jumplist
+
+- id: vim-010
+  topic: vim
+  title: Use :s for search and replace
+  body: >
+    Vim's substitute command is powerful and supports regex. Use flags to
+    control scope and confirmation.
+  example: |
+    :s/old/new/       → replace first on current line
+    :s/old/new/g      → replace all on current line
+    :%s/old/new/g     → replace all in file
+    :%s/old/new/gc    → replace all with confirmation
+    :5,20s/old/new/g  → replace in lines 5-20
+  level: beginner
+  source: https://vimhelp.org/change.txt.html#:substitute
+
+# =============================================================================
+# JavaScript tips
+# =============================================================================
+
+- id: js-001
+  topic: javascript
+  title: Use optional chaining to access nested properties
+  body: >
+    The ?. operator short-circuits to undefined if any part of the chain
+    is null or undefined. No more "Cannot read property of undefined" errors.
+  example: |
+    // Instead of: user && user.address && user.address.city
+    const city = user?.address?.city;
+    const first = arr?.[0];
+    const result = obj?.method?.();
+  level: beginner
+  source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining
+
+- id: js-002
+  topic: javascript
+  title: Use destructuring for cleaner function parameters
+  body: >
+    Destructuring in function parameters makes it clear what a function
+    expects and provides easy defaults.
+  example: |
+    function createUser({ name, role = "viewer", active = true }) {
+      return { name, role, active };
+    }
+
+    createUser({ name: "Alice" });
+    // { name: "Alice", role: "viewer", active: true }
+  level: beginner
+  source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
+
+- id: js-003
+  topic: javascript
+  title: Use Promise.all for parallel async operations
+  body: >
+    Promise.all runs multiple promises concurrently and waits for all to
+    complete. Much faster than awaiting them sequentially.
+  example: |
+    // Slow: sequential
+    const users = await fetchUsers();
+    const posts = await fetchPosts();
+
+    // Fast: parallel
+    const [users, posts] = await Promise.all([
+      fetchUsers(),
+      fetchPosts(),
+    ]);
+  level: intermediate
+  source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all
+
+- id: js-004
+  topic: javascript
+  title: Use Array.from for array-like conversions
+  body: >
+    Array.from converts iterables and array-like objects to real arrays.
+    Its second argument is a map function.
+  example: |
+    // NodeList to Array
+    const divs = Array.from(document.querySelectorAll("div"));
+
+    // Generate a sequence
+    const nums = Array.from({ length: 5 }, (_, i) => i + 1);
+    // [1, 2, 3, 4, 5]
+  level: beginner
+  source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+
+- id: js-005
+  topic: javascript
+  title: Use structuredClone for deep copying
+  body: >
+    structuredClone() creates a true deep copy of objects, handling nested
+    objects, arrays, Maps, Sets, and Dates correctly.
+  example: |
+    const original = { user: { name: "Alice" }, tags: [1, 2] };
+
+    // Shallow copy (nested objects still shared)
+    const shallow = { ...original };
+
+    // Deep copy (fully independent)
+    const deep = structuredClone(original);
+    deep.user.name = "Bob";  // original unchanged
+  level: intermediate
+  source: https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone
+
+- id: js-006
+  topic: javascript
+  title: Use AbortController to cancel fetch requests
+  body: >
+    AbortController lets you cancel in-flight fetch requests. Essential for
+    search-as-you-type and component unmounting.
+  example: |
+    const controller = new AbortController();
+
+    fetch("/api/data", { signal: controller.signal })
+      .then(res => res.json())
+      .catch(err => {
+        if (err.name === "AbortError") return; // expected
+        throw err;
+      });
+
+    // Cancel the request
+    controller.abort();
+  level: intermediate
+  source: https://developer.mozilla.org/en-US/docs/Web/API/AbortController
+
+- id: js-007
+  topic: javascript
+  title: Use Map instead of objects for dynamic keys
+  body: >
+    Map preserves insertion order, supports any key type (not just strings),
+    and has better performance for frequent additions/deletions.
+  example: |
+    const cache = new Map();
+    cache.set(userObj, "data");  // objects as keys!
+    cache.set(42, "answer");     // numbers as keys
+
+    cache.has(userObj);  // true
+    cache.size;          // 2
+    cache.delete(42);
+
+    for (const [key, value] of cache) { ... }
+  level: intermediate
+  source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
+
+- id: js-008
+  topic: javascript
+  title: Use at() for negative array indexing
+  body: >
+    The at() method supports negative indices to count from the end.
+    Cleaner than arr[arr.length - 1] for getting the last element.
+  example: |
+    const arr = [1, 2, 3, 4, 5];
+    arr.at(0);    // 1
+    arr.at(-1);   // 5 (last)
+    arr.at(-2);   // 4 (second to last)
+
+    // Works on strings too
+    "hello".at(-1);  // "o"
+  level: beginner
+  source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at
+
+- id: js-009
+  topic: javascript
+  title: Use Object.groupBy to group array items
+  body: >
+    Object.groupBy groups array elements by a key function. Replaces
+    manual reduce-based grouping patterns.
+  example: |
+    const people = [
+      { name: "Alice", dept: "eng" },
+      { name: "Bob", dept: "sales" },
+      { name: "Charlie", dept: "eng" },
+    ];
+
+    const byDept = Object.groupBy(people, p => p.dept);
+    // { eng: [{Alice}, {Charlie}], sales: [{Bob}] }
+  level: intermediate
+  source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy
+
+- id: js-010
+  topic: javascript
+  title: Use WeakRef for memory-safe caching
+  body: >
+    WeakRef holds a reference that doesn't prevent garbage collection.
+    Combine with FinalizationRegistry for automatic cache cleanup.
+  example: |
+    const cache = new Map();
+
+    function getCached(key, compute) {
+      const ref = cache.get(key);
+      const value = ref?.deref();
+      if (value !== undefined) return value;
+
+      const result = compute();
+      cache.set(key, new WeakRef(result));
+      return result;
+    }
+  level: advanced
+  source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef
+
+# =============================================================================
+# Terraform tips
+# =============================================================================
+
+- id: tf-001
+  topic: terraform
+  title: Use variables with validation rules
+  body: >
+    Variable blocks support validation conditions that catch bad input
+    at plan time, before any resources are created.
+  example: |
+    variable "environment" {
+      type = string
+      validation {
+        condition     = contains(["dev", "staging", "prod"], var.environment)
+        error_message = "Must be dev, staging, or prod."
+      }
+    }
+  level: beginner
+  source: https://developer.hashicorp.com/terraform/language/values/variables
+
+- id: tf-002
+  topic: terraform
+  title: Use terraform fmt to format code
+  body: >
+    `terraform fmt` auto-formats your .tf files to a consistent style.
+    Run it before every commit. Use -check in CI to enforce it.
+  example: |
+    # Format current directory
+    terraform fmt
+    # Format recursively
+    terraform fmt -recursive
+    # Check only (for CI) - exit 1 if changes needed
+    terraform fmt -check -recursive
+  level: beginner
+  source: https://developer.hashicorp.com/terraform/cli/commands/fmt
+
+- id: tf-003
+  topic: terraform
+  title: Use locals to reduce repetition
+  body: >
+    Locals let you define computed values used in multiple places.
+    They simplify complex expressions and reduce copy-paste errors.
+  example: |
+    locals {
+      common_tags = {
+        Environment = var.environment
+        Project     = var.project_name
+        ManagedBy   = "terraform"
+      }
+    }
+
+    resource "aws_instance" "web" {
+      tags = merge(local.common_tags, { Name = "web-server" })
+    }
+  level: beginner
+  source: https://developer.hashicorp.com/terraform/language/values/locals
+
+- id: tf-004
+  topic: terraform
+  title: Use terraform plan -out to save plans
+  body: >
+    Save the plan to a file, then apply exactly that plan. This prevents
+    drift between planning and applying in CI/CD pipelines.
+  example: |
+    # Save the plan
+    terraform plan -out=tfplan
+    # Apply exactly what was planned
+    terraform apply tfplan
+    # In CI: plan in one step, review, then apply
+  level: intermediate
+  source: https://developer.hashicorp.com/terraform/cli/commands/plan
+
+- id: tf-005
+  topic: terraform
+  title: Use data sources to reference existing resources
+  body: >
+    Data sources let you read information about infrastructure that already
+    exists, without managing it. Reference it like any other resource.
+  example: |
+    data "aws_vpc" "main" {
+      filter {
+        name   = "tag:Name"
+        values = ["main-vpc"]
+      }
+    }
+
+    resource "aws_subnet" "app" {
+      vpc_id = data.aws_vpc.main.id
+      # ...
+    }
+  level: intermediate
+  source: https://developer.hashicorp.com/terraform/language/data-sources
+
+- id: tf-006
+  topic: terraform
+  title: Use for_each instead of count for resources
+  body: >
+    for_each creates resources keyed by map or set, so removing an item
+    only destroys that resource. count-based resources shift indexes.
+  example: |
+    variable "buckets" {
+      default = {
+        logs   = "my-logs-bucket"
+        assets = "my-assets-bucket"
+      }
+    }
+
+    resource "aws_s3_bucket" "this" {
+      for_each = var.buckets
+      bucket   = each.value
+      tags     = { Name = each.key }
+    }
+  level: intermediate
+  source: https://developer.hashicorp.com/terraform/language/meta-arguments/for_each
+
+- id: tf-007
+  topic: terraform
+  title: Use lifecycle to prevent accidental destruction
+  body: >
+    The prevent_destroy lifecycle rule stops Terraform from destroying
+    critical resources like databases or storage buckets.
+  example: |
+    resource "aws_db_instance" "main" {
+      # ...
+      lifecycle {
+        prevent_destroy = true
+      }
+    }
+
+    # Also useful: create_before_destroy for zero-downtime
+    lifecycle {
+      create_before_destroy = true
+    }
+  level: intermediate
+  source: https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle
+
+- id: tf-008
+  topic: terraform
+  title: Use moved blocks for safe refactoring
+  body: >
+    The moved block tells Terraform that a resource was renamed, not deleted
+    and recreated. Prevents accidental destruction during refactors.
+  example: |
+    # Renamed aws_instance.web to aws_instance.app
+    moved {
+      from = aws_instance.web
+      to   = aws_instance.app
+    }
+
+    resource "aws_instance" "app" {
+      # ...
+    }
+  level: advanced
+  source: https://developer.hashicorp.com/terraform/language/modules/develop/refactoring
+
+- id: tf-009
+  topic: terraform
+  title: Use terraform import to adopt existing resources
+  body: >
+    `terraform import` brings an existing resource under Terraform management.
+    In Terraform 1.5+, you can use import blocks declaratively.
+  example: |
+    # Declarative import (1.5+)
+    import {
+      to = aws_instance.web
+      id = "i-abc123"
+    }
+
+    # Then run: terraform plan
+    # Terraform generates the config diff
+  level: advanced
+  source: https://developer.hashicorp.com/terraform/language/import
+
+- id: tf-010
+  topic: terraform
+  title: Use terraform state list to audit resources
+  body: >
+    `terraform state list` shows all resources Terraform manages.
+    Use it to audit what's tracked and find resources to remove or move.
+  example: |
+    # List all managed resources
+    terraform state list
+    # Filter by type
+    terraform state list | grep aws_instance
+    # Show details of one resource
+    terraform state show aws_instance.web
+    # Remove from state (without destroying)
+    terraform state rm aws_instance.legacy
+  level: beginner
+  source: https://developer.hashicorp.com/terraform/cli/commands/state/list
+
+# =============================================================================
+# Rust tips
+# =============================================================================
+
+- id: rust-001
+  topic: rust
+  title: Use if let for single-pattern matching
+  body: >
+    `if let` is cleaner than match when you only care about one variant.
+    Great for Option and Result handling.
+  example: |
+    // Instead of:
+    match config.get("port") {
+        Some(port) => println!("Port: {port}"),
+        None => {}
+    }
+    // Use:
+    if let Some(port) = config.get("port") {
+        println!("Port: {port}");
+    }
+  level: beginner
+  source: https://doc.rust-lang.org/book/ch06-03-if-let.html
+
+- id: rust-002
+  topic: rust
+  title: Use the ? operator for error propagation
+  body: >
+    The ? operator returns early with the error if a Result is Err, or
+    unwraps the Ok value. Replaces verbose match/unwrap chains.
+  example: |
+    fn read_config(path: &str) -> Result<Config, Box<dyn Error>> {
+        let contents = fs::read_to_string(path)?;
+        let config: Config = toml::from_str(&contents)?;
+        Ok(config)
+    }
+  level: beginner
+  source: https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html
+
+- id: rust-003
+  topic: rust
+  title: Use iterators instead of manual loops
+  body: >
+    Rust iterators are zero-cost abstractions. Chaining map, filter, and
+    collect is both idiomatic and as fast as hand-written loops.
+  example: |
+    let names: Vec<String> = users
+        .iter()
+        .filter(|u| u.active)
+        .map(|u| u.name.clone())
+        .collect();
+
+    let total: f64 = prices.iter().sum();
+  level: intermediate
+  source: https://doc.rust-lang.org/book/ch13-02-iterators.html
+
+- id: rust-004
+  topic: rust
+  title: Use derive macros for common traits
+  body: >
+    #[derive] auto-implements traits like Debug, Clone, PartialEq, and
+    Serialize. Saves pages of boilerplate.
+  example: |
+    #[derive(Debug, Clone, PartialEq, serde::Serialize)]
+    struct User {
+        name: String,
+        age: u32,
+        active: bool,
+    }
+
+    // Now you can: println!("{:?}", user);
+    // And: user1 == user2
+  level: beginner
+  source: https://doc.rust-lang.org/book/appendix-03-derivable-traits.html
+
+- id: rust-005
+  topic: rust
+  title: Use pattern matching with enums
+  body: >
+    Rust enums can hold data in each variant. Combined with match, they
+    replace class hierarchies and visitor patterns.
+  example: |
+    enum Shape {
+        Circle(f64),
+        Rect(f64, f64),
+    }
+
+    fn area(shape: &Shape) -> f64 {
+        match shape {
+            Shape::Circle(r) => std::f64::consts::PI * r * r,
+            Shape::Rect(w, h) => w * h,
+        }
+    }
+  level: intermediate
+  source: https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html
+
+- id: rust-006
+  topic: rust
+  title: Use clippy for idiomatic Rust
+  body: >
+    Clippy catches common mistakes and suggests more idiomatic code.
+    Run it regularly — it's like having a Rust expert review your code.
+  example: |
+    # Run clippy
+    cargo clippy
+    # Treat all warnings as errors (for CI)
+    cargo clippy -- -D warnings
+    # Fix automatically where possible
+    cargo clippy --fix
+  level: beginner
+  source: https://doc.rust-lang.org/clippy/
+
+- id: rust-007
+  topic: rust
+  title: Use impl blocks with associated functions
+  body: >
+    Associated functions (no &self) are Rust's constructors. By convention,
+    new() creates an instance, but you can name them anything.
+  example: |
+    struct Config {
+        port: u16,
+        debug: bool,
+    }
+
+    impl Config {
+        fn new(port: u16) -> Self {
+            Self { port, debug: false }
+        }
+
+        fn with_debug(mut self) -> Self {
+            self.debug = true;
+            self
+        }
+    }
+
+    let cfg = Config::new(8080).with_debug();
+  level: intermediate
+  source: https://doc.rust-lang.org/book/ch05-03-method-syntax.html
+
+- id: rust-008
+  topic: rust
+  title: Use Option combinators instead of match
+  body: >
+    Option has methods like map, and_then, unwrap_or, and filter that chain
+    cleanly. Prefer these over verbose match expressions.
+  example: |
+    // Instead of matching:
+    let name = user
+        .get("name")
+        .map(|n| n.to_uppercase())
+        .unwrap_or_else(|| "ANONYMOUS".to_string());
+
+    // Chain with and_then for nested Options
+    let city = user.address.as_ref().and_then(|a| a.city.as_ref());
+  level: intermediate
+  source: https://doc.rust-lang.org/std/option/enum.Option.html
+
+- id: rust-009
+  topic: rust
+  title: Use cargo test with module tests
+  body: >
+    Rust tests live right next to the code in a #[cfg(test)] module.
+    Private functions are testable without any special setup.
+  example: |
+    fn add(a: i32, b: i32) -> i32 { a + b }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test_add() {
+            assert_eq!(add(2, 3), 5);
+        }
+
+        #[test]
+        #[should_panic]
+        fn test_overflow() {
+            add(i32::MAX, 1);
+        }
+    }
+  level: beginner
+  source: https://doc.rust-lang.org/book/ch11-01-writing-tests.html
+
+- id: rust-010
+  topic: rust
+  title: Use traits for shared behavior
+  body: >
+    Traits define shared interfaces. Any type can implement a trait, enabling
+    polymorphism without inheritance.
+  example: |
+    trait Summary {
+        fn summarize(&self) -> String;
+        // Default implementation
+        fn preview(&self) -> String {
+            format!("{}...", &self.summarize()[..50])
+        }
+    }
+
+    impl Summary for Article {
+        fn summarize(&self) -> String {
+            format!("{} by {}", self.title, self.author)
+        }
+    }
+  level: intermediate
+  source: https://doc.rust-lang.org/book/ch10-02-traits.html

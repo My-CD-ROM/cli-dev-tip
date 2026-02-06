@@ -14,12 +14,34 @@ A terminal tool that helps developers learn continuously by showing bite-sized t
 ## Installation
 
 ```bash
-uv pip install dev-tip
+uv tool install dev-tip
 ```
 
-No extra packages needed — AI support uses Python's built-in `urllib`.
+This makes `dev-tip` available globally from any terminal. No extra packages needed.
+
+## Quick start
+
+Show a tip on every new terminal session:
+
+```bash
+# Static tips (125 built in, works offline)
+dev-tip enable
+
+# With AI — fresh tips generated via Gemini (free)
+dev-tip enable --provider gemini --key YOUR_GEMINI_API_KEY
+
+# With AI + filters
+dev-tip enable --provider gemini --key YOUR_KEY --topic python --level advanced
+
+# Disable
+dev-tip disable
+```
+
+Get a free Gemini API key at https://aistudio.google.com or a free OpenRouter key at https://openrouter.ai/keys.
 
 ## Usage
+
+One-off tips from the command line:
 
 ```bash
 # Show a random tip (all topics, all levels)
@@ -35,6 +57,9 @@ dev-tip -l advanced
 
 # Combine filters
 dev-tip --topic docker --level intermediate
+
+# Use AI provider for a one-off tip
+dev-tip --provider gemini --key YOUR_KEY --topic kubernetes
 ```
 
 ### Options
@@ -43,18 +68,25 @@ dev-tip --topic docker --level intermediate
 |---|---|---|---|
 | `--topic` | `-t` | Filter tips by topic | All topics |
 | `--level` | `-l` | Filter tips by difficulty | All levels |
+| `--provider` | `-p` | AI provider (gemini, openrouter) | None |
+| `--key` | `-k` | API key for the AI provider | Config or env var |
 
-### Available topics (static tips)
+### Available topics
 
 | Topic | Count |
 |---|---|
-| `python` | 10 |
-| `git` | 10 |
-| `docker` | 10 |
-| `sql` | 10 |
-| `linux` | 10 |
+| `python` | 15 |
+| `git` | 15 |
+| `docker` | 15 |
+| `sql` | 15 |
+| `linux` | 15 |
+| `kubernetes` | 10 |
+| `vim` | 10 |
+| `javascript` | 10 |
+| `terraform` | 10 |
+| `rust` | 10 |
 
-With AI enabled, any topic works (e.g. `kubernetes`, `rust`, `terraform`).
+125 tips built in. With AI enabled, any topic works and tips are generated fresh.
 
 ### Difficulty levels
 
@@ -64,70 +96,14 @@ With AI enabled, any topic works (e.g. `kubernetes`, `rust`, `terraform`).
 | `intermediate` | Deeper concepts and useful tricks |
 | `advanced` | Expert techniques and edge cases |
 
-## Shell hook
-
-Show a tip automatically on every new terminal session:
-
-```bash
-# Enable
-dev-tip enable
-
-# Disable
-dev-tip disable
-```
-
-## Configuration
-
-Config file: `~/.dev-tip/config.toml` (auto-created on first run)
-
-```toml
-# Default topic filter
-# topic = "python"
-
-# Default level filter
-# level = "beginner"
-
-# AI-powered tip generation (free, requires API key in env var)
-# ai_provider = "gemini"        # or "openrouter"
-# ai_model = "gemini-2.0-flash"
-```
-
 ## AI-powered tips
 
-Generate fresh tips dynamically instead of using the static collection. Both providers are free.
+Generate fresh tips dynamically instead of using the built-in collection. Both providers are free.
 
-### Setup
-
-1. Set the provider in your config:
-
-```toml
-# ~/.dev-tip/config.toml
-ai_provider = "gemini"   # or "openrouter"
-```
-
-2. Export your API key:
-
-```bash
-# Gemini (free from https://aistudio.google.com)
-export GEMINI_API_KEY="your-key-here"
-
-# OpenRouter (free, 50 req/day — https://openrouter.ai/keys)
-export OPENROUTER_API_KEY="your-key-here"
-```
-
-### AI models
-
-| Provider | Default model | Override via |
+| Provider | Default model | Free key |
 |---|---|---|
-| `gemini` | `gemini-2.0-flash` | `ai_model` in config |
-| `openrouter` | `google/gemini-2.0-flash-exp:free` | `ai_model` in config |
-
-To use a different model:
-
-```toml
-ai_provider = "openrouter"
-ai_model = "meta-llama/llama-3-8b-instruct:free"
-```
+| `gemini` | `gemini-2.0-flash` | https://aistudio.google.com |
+| `openrouter` | `google/gemini-2.0-flash-exp:free` | https://openrouter.ai/keys |
 
 ### How it works
 
