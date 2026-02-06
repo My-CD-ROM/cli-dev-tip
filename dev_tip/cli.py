@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import random
+import textwrap
 from typing import Optional
 
 import typer
+from rich.cells import cell_len
 from rich.console import Console
-from rich.panel import Panel
-from rich.text import Text
 
 from dev_tip.config import load_config
 from dev_tip.history import all_seen, get_unseen, mark_seen
@@ -30,43 +30,22 @@ TOPIC_EMOJI = {
     "rust": "\U0001f980",
 }
 
-LEVEL_STYLE = {
-    "beginner": ("green", "Beginner"),
-    "intermediate": ("yellow", "Intermediate"),
-    "advanced": ("red", "Advanced"),
-}
-
-
 def _render_tip(tip: dict) -> None:
-    """Display a tip with Rich formatting."""
+    """Display a tip as a compact, dim, right-floated block."""
     topic = tip["topic"]
     emoji = TOPIC_EMOJI.get(topic, "\U0001f4a1")
-    color, level_label = LEVEL_STYLE.get(tip["level"], ("white", tip["level"]))
-
-    title = Text()
-    title.append(f"{emoji} ", style="bold")
-    title.append(tip["title"], style="bold cyan")
-
-    badge = Text(f" {level_label} ", style=f"bold white on {color}")
+    header = f"{emoji} {topic} \u00b7 {tip['level']} \u00b7 {tip['title']}"
 
     body = tip["body"].strip()
-    example = tip.get("example", "").strip()
+    wrap_width = min(console.width, 60)
+    lines = textwrap.wrap(body, width=wrap_width)
 
-    content = Text()
-    content.append(body)
-    if example:
-        content.append("\n\n")
-        content.append("Example:\n", style="bold")
-        content.append(example, style="dim")
-
-    panel = Panel(
-        content,
-        title=title,
-        subtitle=badge,
-        border_style="blue",
-        padding=(1, 2),
-    )
-    console.print(panel)
+    # Fixed-width block, right-floated against terminal edge.
+    term_w = console.width
+    block = [header] + lines
+    pad = term_w - wrap_width
+    for line in block:
+        console.print(" " * max(pad, 0) + line, style="dim", highlight=False)
 
 
 @app.callback()
